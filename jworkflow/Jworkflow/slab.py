@@ -629,9 +629,9 @@ class Slab_Adsorption():
             unit_height = sg._proj_height
             min_slab_size = (ceil(layers / self.unit_layer)) * unit_height
             sg = SlabGenerator(structure, miller_index, min_slab_size, 1, max_normal_search=max(miller_index) + xnp, center_slab=True, primitive=primitive)
-            shifts = sg._calculate_possible_shifts() # pymatgen old version
-            slab_raw = sg.get_slab(shifts[n_shift]) # pymatgen old version
-            # slab_raw = sg.get_slabs()[n_shift % len(sg.get_slabs())] # pymatgen new version
+            # shifts = sg._calculate_possible_shifts() # pymatgen old version
+            # slab_raw = sg.get_slab(shifts[n_shift]) # pymatgen old version
+            slab_raw = sg.get_slabs()[n_shift % len(sg.get_slabs())] # pymatgen new version
             
             LD = Layer_Divide_Process()
             LD.print_info = False
