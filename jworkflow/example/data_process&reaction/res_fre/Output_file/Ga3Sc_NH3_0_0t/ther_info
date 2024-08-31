@@ -1,0 +1,81 @@
+ 
+            \\\///         
+           / _  _ \       Hey, you must know what you are doing.  
+         (| (.)(.) |)     Otherwise you might get wrong results!  
+ +-----.OOOo--()--oOOO.------------------------------------------+
+ |             VASPKIT Version: 1.12 (01 Mar. 2020)              |
+ |        Core Developer: Vei WANG (wangvei@icloud.com)          |
+ |     Main Contributors: Nan XU, Jin-Cheng LIU & Gang TANG      |
+ |    Please send Bugs and Suggestions to vaspkit@gmail.com      |
+ +-----.oooO-----------------------------------------------------+
+        (   )   Oooo.     
+         \ (    (   )     
+          \_)    ) /      
+                (_/       
+ ===================== Structural Options ========================
+ 1)  VASP Input Files Generator    2)  Elastic-Properties         
+ 3)  K-Path Generator              4)  Structure Editor           
+ 5)  Catalysis-ElectroChem Kit     6)  Symmetry Search            
+ 
+ ===================== Electronic Options ========================
+ 11) Density-of-States             21) DFT Band-Structure         
+ 23) 3D Band-Structure             25) Hybrid-DFT Band-Structure  
+ 26) Fermi-Surface                 28) Band-Structure Unfolding   
+ 
+ =========== Charge & Potential & Wavefunction Options ===========
+ 31) Charge & Spin Density         42) Potential-Related          
+ 51) Wave-Function Analysis  
+ ====================== Misc Utilities ===========================
+ 71) Optical-Properties            72) Molecular-Dynamics Kit 
+ 73) VASP2other Interface          74) USER interface
+ 91) Semiconductor Calculator      92) 2D-Materials Kit       
+                                                                  
+ 0)  Quit                                                         
+ ------------>>
+ ==================== Catalysis-ElectroChem Kit ==================
+ 501) Thermal Corrections for Adsorbate                           
+ 502) Thermal Corrections for Gas                                 
+ 503) d-Band Center (experimental)                                
+ 504) Convert NEB-Path to PDB Format for Animation                
+ 505) Interpolate NEB Images Linearly                             
+ 507) Imaginary Frequencies Correction                            
+ 508) Bader2PQR (Shown in VMD by atomic charge)                   
+ 509) Evaluate half life period for a first order reaction        
+                                                                  
+ 0)   Quit                                                        
+ 9)   Back                                                        
+ ------------>>
+ +-------------------------- Warm Tips --------------------------+
+ This Feature Was Contributed by Nan XU, Qiang LI and Jincheng LIU.
+     See An Example in vaspkit/examples/thermo_correction/ORR.        
+ Only vibrations! No Translation & Rotation & Electron contributions.       
+ +---------------------------------------------------------------+
+ 
+ Please Enter The Temperature (K): 
+ 
+ ------------>>
+  -->> (01) Reading OUTCAR File...
+ +-------------------------- Summary ----------------------------+
+ Neglect PV contribution to translation for adsorbed molecules.
+ To avoid abnormal entropy contribution,
+ frequencies less than 50 cm-1 are set to 50 cm-1.
+ U(T) = H(T) = ZPE + Delat_U(0->T)
+ G(T) = H(T) - TS = ZPE + Delat_U(0->T) - TS
+ 
+ Temperature (K): 298.1
+ Zero-point energy E_ZPE   :      22.985 kcal/mol    0.996729 eV
+ Thermal correction to U(T):      25.030 kcal/mol    1.085388 eV
+ Thermal correction to H(T):      25.030 kcal/mol    1.085388 eV
+ Thermal correction to G(T):      20.738 kcal/mol    0.899295 eV
+ Entropy S                 :      60.222 J/(mol*K)   0.000624 eV
+ +---------------------------------------------------------------+
+ +---------------------------------------------------------------+
+ |                       * ACKNOWLEDGMENTS *                     |
+ | Other Contributors: Xue-Fei LIU, Peng-Fei LIU, Dao-Xiong WU,  |
+ | Zhao-Fu ZHANG, Tian WANG, Ya-Chao LIU, Qiang LI, iGo and You! |
+ +---------------------------------------------------------------+
+ |                          * CITATIONS *                        |
+ | We Would Appreciate if You Cite in Your Research with VASPKIT.|
+ | [1] V. Wang, N. Xu, J.C. LIU, G. Tang, et al, VASPKIT: A Pre- |
+ | and Post-Processing Program for VASP Code, arXiv:1908.08269.  |
+ +---------------------------------------------------------------+
