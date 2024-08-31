@@ -18,4 +18,4 @@ Custom Python scripts based mainly on **pymatgen** and are used to analyze VASP 
 - [electronic.py](https://github.com/jchddd/scripts/blob/main/jworkflow/Jworkflow/electronic.py): Gather DOS and COHP information from vasprun.xml and cohpcar.lobster file respectively.
 - [dataset.py](https://github.com/jchddd/scripts/blob/main/jworkflow/Jworkflow/dataset.py): Store molecular structures and energies, and reaction formulas.
 ### Tutorial
-See Tutorial Jupyter Notebooks in 'jworkflow/'.
+See Tutorial Jupyter Notebooks in 'jworkflow/Tutorial-xxx.ipynb'.
