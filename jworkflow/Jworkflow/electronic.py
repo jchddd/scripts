@@ -379,7 +379,7 @@ class Lobster_PProcess():
 
     def get_coxp(self, label, divisor=1, orbitals=None):
         '''
-        Function to get COXP of Specified label and orbitals
+        Function to get COXP of specified label and orbitals
 
         Parameters:
             - label: Bond indexes in lobster calculation / int, str or list
@@ -405,6 +405,23 @@ class Lobster_PProcess():
                 return self.COXP.get_cohp_by_label(label).as_dict()
             else:
                 return self.COXP.get_orbital_resolved_cohp(label, orbitals).as_dict()
+                
+    def get_icohp(self, label):
+        '''
+        Function to get the ICOHP for a specified bond.
+        
+        Parameters:
+            - label: Bond indexes / int
+        Return:
+            - The ICOHP
+        '''
+        label = str(label)
+        cohp = self.COXP.get_cohp_by_label(label).as_dict()
+        for i, energy in enumerate(cohp['energies']):
+            if energy > 0:
+                icohp = cohp['ICOHP']['1'][i]
+                break
+        return icohp
 
     def get_band_properities(self, sites, orbitals=OrbitalType.d, erange=None):
         '''
