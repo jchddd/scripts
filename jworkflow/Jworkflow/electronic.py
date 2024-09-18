@@ -238,7 +238,7 @@ class DOS_Process():
                  / (self.integral('DOS', E, DOS[0], condition2) + self.integral('DOS', E, DOS[1], condition2))
         return round(DF, 2)
 
-    def all_band_properities(self, atom_list, orbitals=OrbitalType.d, erange=None):
+    def all_band_properities(self, atom_list, orbitals=OrbitalType.d, erange=None, spin=None):
         '''
         Function to use pymatgen to calculate all band properities
 
@@ -246,6 +246,7 @@ class DOS_Process():
             - atom_index: List of indexes of the atom / (n)D-list
             - orbitals: List of orbitals to cumulative properities / (n)D-array, pymatgen.Orbital, default OrbitalType.d
             - erange: Energy range of the Band / (2)D-array, default None
+            - spin: Spin channel to use. If None, both spin channels will be combined. / Spin or None, default None
         Return:
             - List of band properities
         '''
@@ -253,12 +254,12 @@ class DOS_Process():
         structure = self.xml.final_structure
         complete_dos = self.xml.complete_dos
         sites = [structure[i] for i in atom_list]
-        band_properities['band center'] = complete_dos.get_band_center(sites=sites, band=orbitals, erange=erange)
-        band_properities['band width'] = complete_dos.get_band_width(sites=sites, band=orbitals, erange=erange)
-        band_properities['band kurtosis'] = complete_dos.get_band_kurtosis(sites=sites, band=orbitals, erange=erange)
-        band_properities['band skewness'] = complete_dos.get_band_skewness(sites=sites, band=orbitals, erange=erange)
-        band_properities['band filling'] = complete_dos.get_band_filling(sites=sites, band=orbitals)
-        band_properities['upper band edge'] = complete_dos.get_upper_band_edge(sites=sites, band=orbitals, erange=erange)
+        band_properities['band center'] = complete_dos.get_band_center(sites=sites, band=orbitals, erange=erange, spin=spin)
+        band_properities['band width'] = complete_dos.get_band_width(sites=sites, band=orbitals, erange=erange, spin=spin)
+        band_properities['band kurtosis'] = complete_dos.get_band_kurtosis(sites=sites, band=orbitals, erange=erange, spin=spin)
+        band_properities['band skewness'] = complete_dos.get_band_skewness(sites=sites, band=orbitals, erange=erange, spin=spin)
+        band_properities['band filling'] = complete_dos.get_band_filling(sites=sites, band=orbitals, spin=spin)
+        band_properities['upper band edge'] = complete_dos.get_upper_band_edge(sites=sites, band=orbitals, erange=erange, spin=spin)
         return band_properities
 
     def get_E_DOS(self, atom_index, orbitals=None, relative_to_fermi=True):
@@ -331,7 +332,7 @@ class Lobster_PProcess():
         - read_car: Function to read in lobster outputs
         - show_bonds: Function to show the bonds in COXPCAR.lobster file
         - get_coxp: Function to get COXP of Specified label and orbitals
-        - get_band_properities: Function to use pymatgen to calculate all band properities
+        - get_icohp: Function to get the ICOHP for a specified bond
         - show_spd_typ: Function to show oribtals on a specified site
         - get_dos: Function to get DOS data
     '''
@@ -422,29 +423,6 @@ class Lobster_PProcess():
                 icohp = cohp['ICOHP']['1'][i]
                 break
         return icohp
-
-    def get_band_properities(self, sites, orbitals=OrbitalType.d, erange=None):
-        '''
-        Function to use pymatgen to calculate all band properities
-
-        Parameters:
-            - sites: List of indexes of the atom / (n)D-list
-            - orbitals: List of orbitals to cumulative properities / (n)D-array, pymatgen.Orbital, default OrbitalType.d
-            - erange: Energy range of the Band / (2)D-array, default None
-        Return:
-            - List of band properities
-        Cautions:
-            - This atom index count from 0
-        '''
-        band_properities = {}
-        sites = [self.DOS.structure[i] for i in sites]
-        band_properities['band center'] = self.DOS.get_band_center(sites=sites, band=orbitals, erange=erange)
-        band_properities['band width'] = self.DOS.get_band_width(sites=sites, band=orbitals, erange=erange)
-        band_properities['band kurtosis'] = self.DOS.get_band_kurtosis(sites=sites, band=orbitals, erange=erange)
-        band_properities['band skewness'] = self.DOS.get_band_skewness(sites=sites, band=orbitals, erange=erange)
-        band_properities['band filling'] = self.DOS.get_band_filling(sites=sites, band=orbitals)
-        band_properities['upper band edge'] = self.DOS.get_upper_band_edge(sites=sites, band=orbitals, erange=erange)
-        return band_properities
 
     def show_spd_typ(self, site):
         '''
