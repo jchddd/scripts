@@ -111,6 +111,7 @@ class Catalytic_Post_Process:
             self.df_slab[column_energy] = self.df_slab[column_energy] * slab_multiply
         else:
             screen_print('Slab Data', 'None') if self.print_info else None
+        self.df_slab[self.column_slab] = [str(slab) for slab in self.df_slab[self.column_slab]]
         # read Gcor table
         if Gcor_file is not None:
             self.df_Gcor = pd.read_excel(os.path.join(file_path, Gcor_file), index_col=0)
@@ -219,8 +220,6 @@ class Catalytic_Post_Process:
         # find the lowest energy adss for each adsb-system pair from df_adss
         df = self.df_adss
         for (sys, adsb), df_group in df.groupby([self.column_slab, 'uf_adsb']):
-            if sys == 'Ag2TiAl' and adsb == 'NH':
-                print(df_group)
             Emin = min(df_group[self.column_energy])
             self.df_path_step.at[sys, adsb] = Emin
             Emin_adss = list(df_group.loc[(df_group[self.column_energy] == Emin)][self.column_adss])[0]
