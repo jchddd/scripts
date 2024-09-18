@@ -450,10 +450,15 @@ class Catalytic_Post_Process:
             sys_barrier = max(sys_barriers)
             if sys_barrier > 0:
                 barriers.append(sys_barrier)
+                PDSs.append(sys_PDSs[sys_barriers.index(sys_barrier)])
             elif sys_barrier < 0:
                 barriers.append(0)
+                PDSs.append(None)
                 none_barrier_count += 1
-            PDSs.append(sys_PDSs[sys_barriers.index(sys_barrier)])
+            else:
+                barriers.append(None)
+                PDSs.append(None)
+                none_barrier_count += 1
         # collect barriers and make statistical analysis
         df['barrier'] = barriers
         df['PDS'] = PDSs
@@ -463,9 +468,14 @@ class Catalytic_Post_Process:
             PDS_count[PDS_unique.index(PDS)] += 1
         PDS_count_str = ''
         for PDS in PDS_unique:
-            PDS_count_str = PDS_count_str + PDS + ': ' + str(PDS_count[PDS_unique.index(PDS)]) + ', '
+            if PDS is not None:
+                PDS_count_str = PDS_count_str + PDS + ': ' + str(PDS_count[PDS_unique.index(PDS)]) + ', '
+            else:
+                PDS_count_str = PDS_count_str + 'None: ' + str(PDS_count[PDS_unique.index(PDS)]) + ', ' 
         # print info
         if self.print_info:
+            barriers = [barrier for barrier in barriers if barrier is not None]
+            PDSs = [PDS for PDS in PDSs if PDS is not None]
             screen_print('Max barrier', df.index[barriers.index(max(barriers))] + ' - ' + PDSs[barriers.index(max(barriers))] + ' - ' + str(max(barriers)))
             screen_print('Min barrier', df.index[barriers.index(min(barriers))] + ' - ' + PDSs[barriers.index(min(barriers))] + ' - ' + str(min(barriers)))
             screen_print('PDS count', PDS_count_str[:-2])
