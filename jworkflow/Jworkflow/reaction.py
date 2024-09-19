@@ -474,8 +474,8 @@ class Catalytic_Post_Process:
                 PDS_count_str = PDS_count_str + 'None: ' + str(PDS_count[PDS_unique.index(PDS)]) + ', ' 
         # print info
         if self.print_info:
-            barriers = [barrier for barrier in barriers if barrier is not None]
-            PDSs = [PDS for PDS in PDSs if PDS is not None]
+            barriers = [barrier if barrier is not None else np.nan for barrier in barriers]
+            PDSs = [PDS if PDS is not None else 'None' for PDS in PDSs]
             screen_print('Max barrier', df.index[barriers.index(max(barriers))] + ' - ' + PDSs[barriers.index(max(barriers))] + ' - ' + str(max(barriers)))
             screen_print('Min barrier', df.index[barriers.index(min(barriers))] + ' - ' + PDSs[barriers.index(min(barriers))] + ' - ' + str(min(barriers)))
             screen_print('PDS count', PDS_count_str[:-2])
