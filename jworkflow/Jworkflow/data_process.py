@@ -221,10 +221,10 @@ class Adss_DataExtract_PostProcess():
         data_number = len(path_iterate)
         # decide extract value type
         if task_type == 'adss':
-            res_list = ['ads_sys', 'system', 'adsb', 'site', 'rotate', 'energy', 'converg', 'mtransla_skel', 'mupgrade_skel', 'mtransla_adsb', 'mdista_adsb', 'mshift_slab',
+            res_list = ['ads_sys', 'system', 'adsb', 'site', 'rotate', 'energy', 'mag', 'converg', 'mtransla_skel', 'mupgrade_skel', 'mtransla_adsb', 'mdista_adsb', 'mshift_slab',
                         'mtransla_slab', 'mupgrade_slab', 'Etime', 'setp']
         elif task_type == 'slab':
-            res_list = ['system', 'energy', 'converg', 'mshift_slab', 'ashift_slab', 'mtransla_slab', 'mupgrade_slab', 'Etime', 'setp']
+            res_list = ['system', 'energy', 'mag', 'converg', 'mshift_slab', 'ashift_slab', 'mtransla_slab', 'mupgrade_slab', 'Etime', 'setp']
         elif task_type == 'Gcor':
             res_list = ['ads_sys', 'system', 'adsb', 'G', 'ZPE', 'H', 'S', 'TS']
         elif task_type == 'sta':
