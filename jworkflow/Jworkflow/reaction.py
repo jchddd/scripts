@@ -292,20 +292,26 @@ class Catalytic_Post_Process:
         Example:
             - CPP.calculate_energy_all(['NRR', 'HER'])
         Cautiou:
-            - Adss not in df_Gcor will be drop from df_adss
+            - Adss not in df_Gcor will be drop from df_adss if free energy correction is calculated
         '''
         # init
         reaction_energy = []
         count_adss = self.df_adss.shape[0]
         # calculate energy
-        for i, adss in enumerate(self.df_adss[self.column_adss].values):
-            if adss in self.df_Gcor[self.column_adss].values:
+        if   self.task_type == 1 or self.task_type == 3:
+            for i, adss in enumerate(self.df_adss[self.column_adss].values):
+                if adss in self.df_Gcor[self.column_adss].values:
+                    energy = self.df_adss.at[i, self.column_energy]
+                    reaction_energy.append(self.get_reaction_energy(adss, energy, dict_e_upd, dict_G_upd, reactions, U, PH))
+                else:
+                    self.df_adss.drop(index=i, inplace=True)
+            self.df_adss[self.column_energy] = reaction_energy
+            self.df_adss.reset_index(drop=True, inplace=True)
+        elif self.task_type == 2:
+            for i, adss in enumerate(self.df_adss[self.column_adss].values):
                 energy = self.df_adss.at[i, self.column_energy]
                 reaction_energy.append(self.get_reaction_energy(adss, energy, dict_e_upd, dict_G_upd, reactions, U, PH))
-            else:
-                self.df_adss.drop(index=i, inplace=True)
-        self.df_adss[self.column_energy] = reaction_energy
-        self.df_adss.reset_index(drop=True, inplace=True)
+            self.df_adss[self.column_energy] = reaction_energy
         # change task type
         self.task_type = 0
         if self.print_info:
