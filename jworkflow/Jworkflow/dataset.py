@@ -40,6 +40,17 @@ dataset_molecule = {
                 'structure': Molecule(['N', 'N', 'H', 'H', 'H', 'H'], [[0, -0.7, 0], [0, 0.7, 0], [0.8, 1.3, 0.4], [-0.8, 1.3, 0.4], [0.8, -1.3, 0.4], [-0.8, -1.3, 0.4]]),
                 'is_translate': True, 'rotate': None},
 
+    'NO3': {'uniform_name': 'NO3', 'structure': Molecule(['N', 'O', 'O', 'O'], [[0, 1.12, 0.643], [0, 2.24, 0], [0, 1.12, 1.86], [0, 0, 0]]), 'is_translate': True, 'rotate': None},
+    'NO3c': {'uniform_name': 'NO3', 'structure': Molecule(['N', 'O', 'O', 'O'], [[0, 0, 0.643], [0, 1.12, 0], [0, 0, 1.86], [0, -1.12, 0]]), 'is_translate': False, 'rotate': None},
+    'NO3H': {'uniform_name': 'NO3H', 'structure': Molecule(['N', 'O', 'O', 'O', 'H'], [[0, 1.12, 0.643], [0, 2.24, 0], [0, 1.12, 1.86], [0, 0, 0], [0, 1.12, 1.6]]), 'is_translate': True, 'rotate': None},
+    'NO3Hc': {'uniform_name': 'NO3H', 'structure': Molecule(['N', 'O', 'O', 'O', 'H'], [[0, 0, 0.643], [0, 1.12, 0], [0, 0, 1.86], [0, -1.12, 0], [0, 0, 1.6]]), 'is_translate': False, 'rotate': None},
+    'NO2': {'uniform_name': 'NO2', 'structure': Molecule(['N', 'O', 'O'], [[0, 1.08, 0.648], [0, 2.166, 0], [0, 0, 0]]), 'is_translate': True, 'rotate': None},
+    'NO2c': {'uniform_name': 'NO2', 'structure': Molecule(['N', 'O', 'O'], [[0, 0, 0.648], [0, 1.08, 0], [0, -1.08, 0]]), 'is_translate': False, 'rotate': None},
+    'NO2h': {'uniform_name': 'NO2', 'structure': Molecule(['N', 'O', 'O'], [[0, 0, 0], [0, -0.62, 1.], [0, 1.3, 0.]]), 'is_translate': True, 'rotate': None},
+    'NO2Hh': {'uniform_name': 'NO2H', 'structure': Molecule(['N', 'O', 'O', 'H'], [[0, 0, 0], [0, -0.62, 1.], [0, 1.3, 0.], [0, -0.62, 1.96]]), 'is_translate': True, 'rotate': None},
+    'NO': {'uniform_name': 'NO', 'structure': Molecule(['N', 'O'], [[0, 0, 0], [0, 0, 1.23]]), 'is_translate': True, 'rotate': None},
+    'NOH': {'uniform_name': 'NOH', 'structure': Molecule(['N', 'O', 'H'], [[0, 0, 0], [0, 0, 1.4], [0, 0.92, 1.7]]), 'is_translate': True, 'rotate': None},
+
     'CO': {'uniform_name': 'CO', 'structure': Molecule(['C', 'O'], [[0, 0, 0], [0, 0, 1.2]]), 'is_translate': True, 'rotate': None},
     'H2O': {'uniform_name': 'H2O', 'structure': Molecule(['O', 'H', 'H'], [[0, 0, 0], [0, -0.77, 0.59], [0, 0.77, 0.59]]), 'is_translate': True, 'rotate': None},
     'OH': {'uniform_name': 'OH', 'structure': Molecule(['O', 'H'], [[0, 0, 0], [0, 0, 0.97]]), 'is_translate': True, 'rotate': None},
@@ -126,6 +137,20 @@ dataset_reaction = {
         'NH3': '*NH3 + 3xH + 3xe + 0.5xN2(g)',
         'prod': '* + 2xNH3(g)'
     },
+    'NO3RR': {
+        'reac': '* + NO3f + 9xH + 9xe',
+        'NO3': '*NO3 + 9xH + 9xe',
+        'NO3H': '*NO3H + 8xH + 8xe',
+        'NO2': '*NO2 + 7xH + 7xe + H2O(l)',
+        'NO2H': '*NO2H + 6xH + 6xe + H2O(l)',
+        'NO': '*NO + 5xH + 5xe + 2xH2O(l)',
+        'NOH': '*NOH + 4xH + 4xe + 2xH2O(l)',
+        'N': '*N + 3xH + 3xe + 3xH2O(l)',
+        'NH': '*NH + 2xH + 2xe + 3xH2O(l)',
+        'NH2': '*NH2 + 1xH + 1xe + 3xH2O(l)',
+        'NH3': '*NH3 + 3xH2O(l)',
+        'prod': 'NH3(g) + 3xH2O(l)'
+    },
     'EOR': {
         'reac': '* + CH3CH2OH(l) + 3xH2O(l)',
         'CH3CH2OH': '*CH3CH2OH + 3xH2O(l)',
@@ -166,6 +191,8 @@ dataset_energy = {
 
     'N2': -16.63315679, # -16.63517878 20x20x20 520 G1 1E-7 -0.001 0 0.01 PBE-D3
     'NH3': -19.53883747, # -19.53943296 20x20x20 520 G1 1E-7 -0.001 0 0.01 PBE-D3
+    'HNO3': -28.61173801, # 20x20x20 520 G1 1E-7 -0.001 0 0.01 PEB-D3
+    'NO3f': -25.226642475,# E(HNO3(g)) - 0.5 E(H2(g))
 
     'CH3CH2OH': -46.92672187, # 20x20x20 520 G1 1E-7 -0.001 0 0.01 PBE-D3
     'CH3COOH': -46.77247686, # 20x20x20 520 G1 1E-7 -0.001 0 0.01 PBE-D3
@@ -182,6 +209,8 @@ dataset_Gcor = { # 298.15k 1bar
 
     'N2(g)': -0.352809, # -0.35779568903955816 CCCBDB 0.14444164298284623(ZPE)-0.5022373320224044(H-TS)
     'NH3(g)': 0.388528, # 0.4028615132745161 CCCBDB 0.8944843204289648(ZPE)-0.49162280715444867(H-TS)
+    'HNO3(g)': -0.005, # -0.004954969638454765 CCCBDB 0.6966054687546107(ZPE)-0.7015604383930655(H-TS) 
+    'NO3f': -0.3679658485895027,# G(HNO3(g)) - 0.5 G(H2(g)) - Gcorrect(0.392) https://doi.org/10.1002/adfm.202008533
 
     'CH3CH2OH(g)': 1.3800252076253468, # CCCBDB 2.1038142272876637(ZPE)-0.7237890196623169(H-TS)
     'CH3COOH(g)': 0.8681174785783672, # CCCBDB 1.6031162607452374(ZPE)-0.7349987821668702(H-TS)
