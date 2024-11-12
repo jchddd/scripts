@@ -19,6 +19,7 @@ def get_vasp_results(result_type, path=None):
         - result_type: Type of the extract result / str
             'E': total energy
             'C': bool value about whether the calculation is compeleted
+            'D': bool value about whether the whether the first electron iteration converges
             'L': Total number of ion step
             'M': Total magnetism in OSZICAR
             'N': Max number of electronic step
@@ -49,6 +50,28 @@ def get_vasp_results(result_type, path=None):
             if match != []:
                 result = True
         f.close()
+    elif result_type == 'D':
+        f = open(path + '\\INCAR')
+        for line in f:
+            if 'NELM' in line and 'DL' not in line and 'MIN' not in line:
+                nelm = line
+                break
+        f.close()
+        nelm = int(nelm.split('\\')[0].split('=')[1].strip())
+
+        f = open(path + '\\OSZICAR')
+        first_ele_count = 0
+        for line in f:
+            if ':' in line:
+                first_ele_count += 1
+            elif 'F=' in line:
+                break
+        f.close()
+
+        if first_ele_count < nelm:
+            result = True
+        else:
+            result = False
     elif result_type == 'T':
         result = -1
         f = open(path + '\\OUTCAR')
@@ -80,6 +103,8 @@ def get_vasp_results(result_type, path=None):
             match = re.findall(':', line)
             if match != []:
                 es += 1
+            elif 'F=' in line:
+                break
         result = es
         f.close()
     elif result_type == 'G':
@@ -118,7 +143,7 @@ def get_vasp_results(result_type, path=None):
         return result
     except UnboundLocalError:
         screen_print('Error', result_type + ' in ' + path + ' Value not found !!!', start='\n')
-        return 666
+        return 6
 
 
 class Adss_DataExtract_PostProcess():
@@ -221,14 +246,14 @@ class Adss_DataExtract_PostProcess():
         data_number = len(path_iterate)
         # decide extract value type
         if task_type == 'adss':
-            res_list = ['ads_sys', 'system', 'adsb', 'site', 'rotate', 'energy', 'mag', 'converg', 'mtransla_skel', 'mupgrade_skel', 'mtransla_adsb', 'mdista_adsb', 'mshift_slab',
-                        'mtransla_slab', 'mupgrade_slab', 'Etime', 'setp']
+            res_list = ['ads_sys', 'system', 'adsb', 'site', 'rotate', 'energy', 'mag', 'converg','mtransla_skel', 'mupgrade_skel', 'mtransla_adsb', 'mdista_adsb', 'mshift_slab',
+                        'mtransla_slab', 'mupgrade_slab', 'Etime', 'setp'] # , 'Econverg', 'estep'
         elif task_type == 'slab':
-            res_list = ['system', 'energy', 'mag', 'converg', 'mshift_slab', 'ashift_slab', 'mtransla_slab', 'mupgrade_slab', 'Etime', 'setp']
+            res_list = ['system', 'energy', 'mag', 'converg','mshift_slab', 'ashift_slab', 'mtransla_slab', 'mupgrade_slab', 'Etime', 'setp'] # , 'estep', 'Econverg'
         elif task_type == 'Gcor':
             res_list = ['ads_sys', 'system', 'adsb', 'G', 'ZPE', 'H', 'S', 'TS']
         elif task_type == 'sta':
-            res_list = ['system', 'formula', 'energy', 'mag', 'Etime', 'setp', 'estep']
+            res_list = ['system', 'formula', 'energy', 'mag', 'Etime', 'estep', 'Econverg'] # , 'setp'
         res_dict = dict()
         for res_key in res_list:
             res_dict[res_key] = []
@@ -269,6 +294,8 @@ class Adss_DataExtract_PostProcess():
                     res_dict[key].append(get_vasp_results('E', path))
                 elif key == 'converg':
                     res_dict[key].append(get_vasp_results('C', path))
+                elif key == 'Econverg':
+                    res_dict[key].append(get_vasp_results('D', path))
                 elif key == 'Etime':
                     res_dict[key].append(get_vasp_results('T', path))
                 elif key == 'setp':
