@@ -39,7 +39,7 @@ dataset_molecule = {
     'NH2NH2h': {'uniform_name': 'NH2NH2',
                 'structure': Molecule(['N', 'N', 'H', 'H', 'H', 'H'], [[0, -0.7, 0], [0, 0.7, 0], [0.8, 1.3, 0.4], [-0.8, 1.3, 0.4], [0.8, -1.3, 0.4], [-0.8, -1.3, 0.4]]),
                 'is_translate': True, 'rotate': None},
-
+    
     'NO3': {'uniform_name': 'NO3', 'structure': Molecule(['N', 'O', 'O', 'O'], [[0, 1.12, 0.643], [0, 2.24, 0], [0, 1.12, 1.86], [0, 0, 0]]), 'is_translate': False, 'rotate': None},
     'NO3c': {'uniform_name': 'NO3', 'structure': Molecule(['N', 'O', 'O', 'O'], [[0, 0, 0.643], [0, 1.12, 0], [0, 0, 1.86], [0, -1.12, 0]]), 'is_translate': True, 'rotate': None},
     'NO3H': {'uniform_name': 'NO3H', 'structure': Molecule(['N', 'O', 'O', 'O', 'H'], [[0, 1.12, 0.643], [0, 2.24, 0], [0, 1.12, 1.86], [0, 0, 0], [0, 1.12, 2.8]]), 'is_translate': False, 'rotate': None},
@@ -204,7 +204,7 @@ dataset_energy = {
 dataset_Gcor = { # 298.15k 1bar
     'H2(g)': -0.121660, # -0.05806830282099462 CCCBDB 0.257961615785502(ZPE)-0.3160299186064966(H-TS)
     'H': -0.121660 / 2,
-    'H2O(g)': 0.07749534868389718, # CCCBDB 0.5584250300384028(ZPE)--0.48092968135450564(H-TS)
+    'H2O(g)': 0.07749534868389718, # CCCBDB 0.5584250300384028(ZPE)-0.48092968135450564(H-TS)
     'H2O(l)': -0.008634651316102832,
 
     'N2(g)': -0.352809, # -0.35779568903955816 CCCBDB 0.14444164298284623(ZPE)-0.5022373320224044(H-TS)
