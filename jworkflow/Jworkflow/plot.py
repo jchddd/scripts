@@ -27,6 +27,66 @@ def view_structure_VASP(structure):
     view(ase_atoms)
 
 
+def data_distribution(data_list, bar_number=10, return_seperate=False):
+    '''
+    Function to draw bar and boxline graphs
+
+    Parameters:
+        - data_list: 1 dimensional data for statistical analysis / array-like
+        - bar_number: The number of bar in a bar chart / int, default 10
+        - return_seperate: Whether to return the split criterion of the bar graph / bool, default False
+    Return:
+        - Show the bar and boxline plot
+        - Return the list of bar seperation value, if return_seperate is True
+    '''
+    # init
+    data = list(data_list)
+    data.sort()
+    data_max = max(data) + 0.01
+    data_min = min(data) - 0.01
+    Fig = plt.figure(figsize=(30, 15))
+    # bar graph
+    ax1 = Fig.add_axes([0.1, 0.1, 0.5, 0.8])
+    ax1.tick_params(length=6, width=3, labelsize=26)
+    bar_count = [0] * bar_number
+    bar_seperate = []
+    bar_seperate_str = []
+    for i in range(bar_number):
+        bar_seperate_i = data_min + (data_max - data_min) * (i + 1) / bar_number
+        bar_seperate.append(bar_seperate_i)
+        bar_seperate_str.append(str(round(bar_seperate_i, 2)))
+    for i in range(len(data)):
+        for j in range(bar_number):
+            if data[i] <= bar_seperate[j]:
+                bar_count[j] += 1
+                break
+    ax1.bar(bar_seperate_str, bar_count, align='edge', width=-0.8)
+    for i in range(len(bar_count)):
+        ax1.text(i, bar_count[i], str(bar_count[i]), fontsize=26, ha='right', va='bottom')
+    # boxline graph
+    ax2 = Fig.add_axes([0.7, 0.1, 0.2, 0.8])
+    ax2.tick_params(length=6, width=3, labelsize=26)
+    ax2.scatter([0] * len(data), data, zorder=6)
+    Q1 = np.percentile(data, (25))
+    Q2 = np.percentile(data, (50))
+    Q3 = np.percentile(data, (75))
+    IQR = Q3 - Q1
+    edge_upper = Q3 + 1.5 * IQR
+    edge_lower = Q1 - 1.5 * IQR
+    for data_statistic in [edge_lower, Q1, Q2, Q3, edge_upper]:
+        color = 'r' if data_statistic == Q2 else 'k'
+        line_len = 0.3 if data_statistic == edge_lower or data_statistic == edge_upper else 0.5
+        ax2.plot([-1 * line_len, line_len], [data_statistic, data_statistic], c=color)
+        ax2.text(-0.3, data_statistic, str(round(data_statistic, 2)), c=color, ha='left', va='bottom', fontsize=26)
+    ax2.plot([-0.5, -0.5], [Q1, Q3], c='k')
+    ax2.plot([0.5, 0.5], [Q1, Q3], c='k')
+    ax2.plot([0, 0], [edge_lower, Q1], c='k', ls='--', zorder=3)
+    ax2.plot([0, 0], [Q3, edge_upper], c='k', ls='--', zorder=3)
+    plt.show()
+    # return seperaters
+    if return_seperate:
+        return bar_seperate
+
 
 def gradient_graphics(axes, x, y, colormap='viridis', color_matrix=[[0], [1]], edge_para=['k', 1], extend=0.1, alpha=1, zorder=666):
     '''
@@ -213,8 +273,8 @@ def plot_configration(df, plot_part, sequence=None, structure_path=os.getcwd(), 
 
 
 def energy_diagram(ax, df, sys, path_steps, lp_step=[1, 1.2, '-'], lp_link=[1, 0.6, '--'], xticks=None, xtickpara=[6, -30, 'left'],
-                   set_yticks=None, set_ylabel=None, xlim=None, ylim=None, set_legend=None, mark_PDS=None, annotatepara=[0.6,6,6], 
-                   bar_elp=None, elp_insert=666):
+                   set_yticks=None, set_ylabel=None, xlim=None, ylim=None, set_legend=None, show_space_line=False, space_line_para=['lightgrey', 0.6, '--'],
+                   mark_PDS=None, annotatepara=[0.6,6,6], bar_elp=None, elp_insert=66):
     '''
     Function to plot the energy diagram
 
@@ -241,6 +301,8 @@ def energy_diagram(ax, df, sys, path_steps, lp_step=[1, 1.2, '-'], lp_link=[1, 0
         - ylim: Y axis lims / (2) list include minY, maxY, default None
         - set_legend: Set legend / (3) list include legend informations, fontsize and index location, default None
             Legend information is (n, 4) list including label name, color, width and style of the line for each legends
+        - show_space_line: Show lines that split each steps / bool, default False
+        - space_line_para: Color, line width and line style for space line / (3,) list, default ['grey', 0.6, '--'] 
         - mark_PDS: Use arrows to maek PDSs / (n, 3) list including PDS column name, arrow color and text info, default None
             Text info is used to write the value of PDS, it can be ignored and use a (n, 2) list for this parameter
             It should be a (4) list including x and y offset from the center of the arrow, text color and fontsize
@@ -250,7 +312,7 @@ def energy_diagram(ax, df, sys, path_steps, lp_step=[1, 1.2, '-'], lp_link=[1, 0
             The second controls the shape of ellipses with joint line slop, height and half length for center ellipse (appear part), (k = 3)
             The third controls the line shap including line width, color and line style, (k = 3)
             The final controls the text info with x and y offset from the top of ellipses, color and fontsize, it can be ignored (k = 4)
-        - elp_insert: Insert point number use to draw the ellipse / int, default 666
+        - elp_insert: Insert point number use to draw the ellipse / int, default 66
     Cautions: 
         - You can use 'none' color to hide unexpected steps or links
         - The length of each step and links projected on the X-axis is 1 (default) and the diagram starts from 0
@@ -297,6 +359,11 @@ def energy_diagram(ax, df, sys, path_steps, lp_step=[1, 1.2, '-'], lp_link=[1, 0
         for legend in set_legend[0]:
             ax.plot([-0.00666] * 2, [-0.00666] * 2, label=legend[0], c=legend[1], lw=legend[2], ls=legend[3])
         ax.legend(facecolor='none', edgecolor='none', fontsize=set_legend[1], loc=set_legend[2])
+    # show_space_line
+    if show_space_line:
+        line_position = np.array(xtick_position) + lp_step[0] / 2 + lp_link[0] / 2
+        for lp in line_position:
+            ax.axvline(x=lp, c=space_line_para[0], lw=space_line_para[1], ls=space_line_para[2], zorder=0)
     # mark PDS
     if mark_PDS:
         for pdsinfo in mark_PDS:
