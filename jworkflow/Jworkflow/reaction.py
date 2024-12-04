@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import os
 
-from Jworkflow.utility import screen_print
+from Jworkflow.utility import screen_print, write_list_to_file
 from Jworkflow.dataset import uniform_adsb, reaction_energy, adsb_to_reaction
 
 
@@ -368,34 +368,34 @@ class Catalytic_Post_Process:
             screen_print('Structures need to be examined', 'Not found')
         screen_print('Inspection Done') if self.print_info else None
 
-    def export_adss_names(self, export_type='inspect', file_name='Str_list'):
+    def export_adss_names(self, export_type='inspect', file_name='Str_list', file_type='Linux'):
         '''
         Export specified structure names to a file that can use in the linux system
 
         Parameters:
             - export_type: Which structures to export / str in 'inspect' or 'Emin' default 'inspect'
             - file_name: The name of the file that stored the export structure names / str, default 'Str_list'
+            - file_type: The system which the file is used at / str, default 'Linux', or 'Windows'
         Accomplish:
             - Write a file to the work path with structure names on it
         '''
-        # open file
-        write_file = open(os.path.join(self.work_path, file_name), 'w')
-        # write file
+        # write adss names
+        adss_names = []
         # write inspect structure
         if export_type == 'inspect':
             for sys in self.df_path_adss.index:
                 for adsb in self.df_path_adss.columns:
                     if not self.df_inspect.isnull().at[sys, adsb]:
                         for i in range(len(self.df_inspect.at[sys, adsb]['adss'])):
-                            write_file.write(self.df_inspect.at[sys, adsb]['adss'][i] + '\n')
+                            adss_names.append(self.df_inspect.at[sys, adsb]['adss'][i])
         # write stablest structure
         elif export_type == 'Emin':
             for sys in self.df_path_adss.index:
                 for adsb in self.df_path_adss.columns:
                     if not self.df_path_adss.isnull().at[sys, adsb]:
-                        write_file.write(self.df_path_adss.at[sys, adsb] + '\n')
-        # close file
-        write_file.close()
+                        adss_names.append(self.df_path_adss.at[sys, adsb])
+        write_list_to_file(adss_names, os.path.join(self.work_path, file_name), file_type)
+        # print info
         if self.print_info:
             screen_print('Export adss')
             screen_print('Save file', os.path.join(self.work_path, file_name))

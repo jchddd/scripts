@@ -2,7 +2,7 @@ from pymatgen.analysis.adsorption import AdsorbateSiteFinder
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.util.coord import in_coord_list_pbc
 from pymatgen.core.surface import SlabGenerator
-from pymatgen.core import Structure
+from pymatgen.core import Structure, Lattice
 
 from matplotlib import pyplot as plt
 from math import floor, ceil
@@ -15,6 +15,25 @@ import Jworkflow.utility as utility
 from Jworkflow.plot import view_structure_VASP, plot_slab
 
 
+def substitute_in_probability(struc, sub_por):
+    '''
+    Function to replace atoms according to probability
+    
+    Parameters:
+        - struc: The structure of the atoms that need to be replaced / pymatgen.core.Structure
+        - sub_por: The probabilitys of replacement elements for each element in the structure / dict 
+          For example {'Sc': {'Ti': 1/2, 'Y': 1/2}} means replace Sc with Ti and Y with a probability of 1/2
+    Return:
+        - Structure after substitution
+    '''
+    s = struc.copy()
+    for i, ele in enumerate([atom.symbol for atom in s.species]):
+        p = list(sub_por[ele].values())
+        sub_ele = np.random.choice(list(sub_por[ele].keys()), p=p)
+        s[i] = sub_ele
+    return s
+
+    
 def random_substitute(struc, substi_element, substi_atom, atom_identify_way='layer'):
     '''
     Function to substitute selected atoms with specified elements in equal proportion 
@@ -22,7 +41,7 @@ def random_substitute(struc, substi_element, substi_atom, atom_identify_way='lay
     Parameters:
         - struc: The structure of the atoms that need to be replaced / pymatgen.core.Structure
         - substi_element: Elements to substitute / (n) list
-        - substi_atom: Atoms to be substituted / (n) list, int
+        - substi_atom: select the atoms to be substituted by atomic or layer index / (n) list, int
         - atom_identify_way: The way to select atoms / str in 'layer' and 'index', default 'layer'
     Return:
         - Structure after substitution
@@ -96,6 +115,112 @@ def get_vector(structure, atom_from, atom_to, is_frac=True):
     # calculate the vector
     vector = [coord_to[0] - coord_from[0], coord_to[1] - coord_from[1], coord_to[2] - coord_from[2]]
     return vector
+
+
+def expand_structure(structure, scale=[1, 1, 1]):
+    '''
+    Function to expand cell lattice without changing the atomic structure and placed origin structure in the middle
+    
+    Parameters:
+        - structure: The origin structure / pymatgen.core.Structure
+        - scale: Expand scale for each lattice vector, must greater than 1 / (3) array, default [1, 1, 1]
+    Return:
+        - The expanded structure
+    '''
+    scale = np.array(scale).reshape(-1, 1)
+    lattice_matrix = structure.lattice.matrix
+    new_lattice_matrix = lattice_matrix * scale
+    new_lattice = Lattice(new_lattice_matrix)
+
+    cart_coords = structure.cart_coords
+    structure_expand = Structure(new_lattice, structure.species, cart_coords, coords_are_cartesian=True, site_properties=structure.site_properties)
+
+    old_center = np.sum(lattice_matrix, axis=0) / 2
+    new_center = np.sum(new_lattice_matrix, axis=0) / 2
+    translation_vector = new_center - old_center
+    structure_expand.translate_sites(range(len(structure_expand)), translation_vector, frac_coords=False)
+    
+    return structure_expand
+
+
+def reverse_slab(slab, lowest_z=None):
+    '''
+    Function to reverse a slab, the Z axis should be perpendicular to the XY plane.
+    
+    Parameters:
+        - slab: the slab to upside down / Pymagen.core.Structure
+        - lowest_z: The reversed slab is shifted so that the lowest atom is located at that coordinate / float or None, default None
+    Return:
+        - the reversed slab
+    '''
+    z_length = slab.lattice.abc[2]
+    cart_coords = slab.cart_coords
+    
+    for i, coord in enumerate(cart_coords):
+        if   coord[2] > z_length:
+            cart_coords[i][2] = z_length - (coord[2] - z_length)
+        elif coord[2] >= 0 and coord[2] <= z_length:
+            cart_coords[i][2] = z_length - coord[2]
+        elif coord[2] < 0:
+            cart_coords[i][2] = z_length - (coord[2] + z_length)
+    
+    if lowest_z is not None:
+        cart_coords = shift_z_coord(cart_coords, lowest_z)
+        
+    return Structure(slab.lattice, slab.species, cart_coords, coords_are_cartesian=True, site_properties=slab.site_properties)
+
+
+def shift_z_coord(coords, target_z, method='min'):
+    '''
+    Function to translation coordinates such that the highest or lowest z-coordinate is moved to a specified height
+    
+    Parameters:
+        - coords: atomic coordinate / (3, 3) array-like
+        - target_z: the target z height / float
+        - method: reference atom selection mode / str, 'max' or 'min', default 'min'
+    '''
+    if   method == 'min':
+        z_move = min(coords[:, 2]) - target_z
+    elif method == 'max':
+        z_move = max(coords[:, 2]) - target_z
+    coords[:, 2] = coords[:, 2] - z_move
+    return coords
+
+
+def cat_slab(slabs, distances, anchor_z=0, lattice_standard=0, vacuum=15):
+    '''
+    Function to cat slabs with similar lattice to a heterojunction
+    
+    Parameters:
+        - slabs: list of slabs to cat / list of pymatgen.core.Structure
+        - distances: spacing between slabs / list of float, its length should be len(slabs) - 1
+        - anchor_z: the z coordinates of the lowest atom in the first (lowest) slab / float, default = 0
+        - lattice_standard: decide lattice of which slab is used as the standard for scaling lattices of other slabs / int, default 0
+        - vacuum: vacuum length / float, default 15
+    Return:
+        - the heterojunction
+    '''
+    standard_lattice = slabs[lattice_standard].lattice
+    # loop for each slab, get site coordinations under the heterojunction
+    species_cat = []
+    cart_coords_cat = []
+    for i, slab in enumerate(slabs):
+        scaled_slab = Structure(standard_lattice, slab.species, slab.frac_coords)
+        cart_coords = scaled_slab.cart_coords
+        cart_coords[:, 2] = slab.cart_coords[:, 2]
+        if   i == 0:
+            cart_coords = shift_z_coord(cart_coords, anchor_z, 'min')
+        elif i != 0:
+            cart_coords = shift_z_coord(cart_coords, max([max(coords[:, 2]) for coords in cart_coords_cat]) + distances[i - 1], 'min')
+        species_cat += slab.species
+        cart_coords_cat.append(cart_coords)
+    # create heterojunction
+    cart_coords_cat = np.concatenate(cart_coords_cat)
+    total_z = max(cart_coords_cat[:, 2]) - min(cart_coords_cat[:, 2]) + vacuum
+    cat_lattice = [list(axis_vector) for axis_vector in standard_lattice.matrix]
+    cat_lattice[-1][-1] = total_z
+    cat_slab = Structure(cat_lattice, species_cat, cart_coords_cat, coords_are_cartesian=True)
+    return cat_slab
 
 
 class Layer_Divide_Process():
@@ -492,11 +617,10 @@ class Slab_Adsorption():
         unit_termination = len(sg.get_slabs())
         unit_height = sg._proj_height
         unit_ceil = sg.oriented_unit_cell
-        if abs(unit_ceil.lattice.angles[2] - 90) > 0.666 or abs(unit_ceil.lattice.matrix[2][0]) > 0.666 \
-        or abs(unit_ceil.lattice.matrix[2][1] > 0.666) or abs(unit_ceil.lattice.matrix[2][3]) < 0.666:
-                unit_ceil = sg.get_slabs()[0]
-                if abs(unit_ceil.lattice.angles[2] - 90) > 0.666:
-                    utility.screen_print('Warning !!', 'Max normal search failed! please increase xnp')
+        if unit_ceil.lattice.matrix[2].dot(np.array([1,1,0])) > 0.666:
+            unit_ceil = sg.get_slabs()[0]
+            if unit_ceil.lattice.matrix[2].dot(np.array([1,1,0])) > 0.666:
+                utility.screen_print('Warning !!', 'Max normal search failed! please increase xnp')
         # check layers of the unit slab
         LD = Layer_Divide_Process()
         LD.print_info = False
@@ -589,10 +713,9 @@ class Slab_Adsorption():
         if self.unit_layer == 0:
             sg = SlabGenerator(self.strus_bulk[0], miller_index, 1, 10, max_normal_search=max(miller_index) + xnp, primitive=primitive)
             unit_ceil = sg.oriented_unit_cell
-            if abs(unit_ceil.lattice.angles[2] - 90) > 0.666 or abs(unit_ceil.lattice.matrix[2][0]) > 0.666 \
-            or abs(unit_ceil.lattice.matrix[2][1] > 0.666) or abs(unit_ceil.lattice.matrix[2][3]) < 0.666:
+            if unit_ceil.lattice.matrix[2].dot(np.array([1,1,0])) > 0.666:
                 unit_ceil = sg.get_slabs()[0]
-                if abs(unit_ceil.lattice.angles[2] - 90) > 0.666:
+                if unit_ceil.lattice.matrix[2].dot(np.array([1,1,0])) > 0.666:
                     utility.screen_print('Warning !!', 'Max normal search failed! please increase xnp')
             LD = Layer_Divide_Process()
             LD.print_info = False
@@ -629,9 +752,9 @@ class Slab_Adsorption():
             unit_height = sg._proj_height
             min_slab_size = (ceil(layers / self.unit_layer)) * unit_height
             sg = SlabGenerator(structure, miller_index, min_slab_size, 1, max_normal_search=max(miller_index) + xnp, center_slab=True, primitive=primitive)
-            # shifts = sg._calculate_possible_shifts() # pymatgen old version
-            # slab_raw = sg.get_slab(shifts[n_shift]) # pymatgen old version
-            slab_raw = sg.get_slabs()[n_shift % len(sg.get_slabs())] # pymatgen new version
+            shifts = sg._calculate_possible_shifts() # pymatgen old version
+            slab_raw = sg.get_slab(shifts[n_shift]) # pymatgen old version
+            # slab_raw = sg.get_slabs()[n_shift % len(sg.get_slabs())] # pymatgen new version
             
             LD = Layer_Divide_Process()
             LD.print_info = False
