@@ -49,6 +49,7 @@ dataset_molecule = {
     'NO2c': {'uniform_name': 'NO2', 'structure': Molecule(['N', 'O', 'O'], [[0, 0, 0.648], [0, 1.08, 0], [0, -1.08, 0]]), 'is_translate': True, 'rotate': None},
     'NO2h': {'uniform_name': 'NO2', 'structure': Molecule(['N', 'O', 'O'], [[0, 0, 0], [0, -0.62, 1.], [0, 1.3, 0.]]), 'is_translate': False, 'rotate': None},
     'NO2Hh': {'uniform_name': 'NO2H', 'structure': Molecule(['N', 'O', 'O', 'H'], [[0, 0, 0], [0, -0.62, 1.], [0, 1.3, 0.], [0, -0.62, 1.96]]), 'is_translate': False, 'rotate': None},
+    'NO2Hv': {'uniform_name': 'NO2H', 'structure': Molecule(['N', 'O', 'O', 'H'], [[0, 0, 1.23], [0, 0, 0], [0, 0, 2.46], [0, 0, 3.5]]), 'is_translate': True, 'rotate': None},
     'NO': {'uniform_name': 'NO', 'structure': Molecule(['N', 'O'], [[0, 0, 0], [0, 0, 1.23]]), 'is_translate': True, 'rotate': None},
     'NOH': {'uniform_name': 'NOH', 'structure': Molecule(['N', 'O', 'H'], [[0, 0, 0], [0, 0, 1.4], [0, 0.92, 1.7]]), 'is_translate': True, 'rotate': None},
 
