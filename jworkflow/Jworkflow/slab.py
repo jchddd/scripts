@@ -80,6 +80,28 @@ def random_substitute(struc, substi_element, substi_atom, atom_identify_way='lay
     return structure
 
 
+def slab_to_bulk(slab, gap=2):
+    '''
+    Turn a slab to bulk structure for heterojunction cnostruction
+
+    Prameters:
+        - slab (pymatgen.Structure)
+        - gap (float): distance between bottom and top atoms. Default 2
+    Returen:
+        - the bulk slab structure
+    '''
+    slab = slab.copy()
+    lattice = slab.lattice.matrix.copy()
+    cart_coords = slab.cart_coords
+    minc = np.min(cart_coords[:, 2])
+    maxc = np.max(cart_coords[:, 2])
+    cart_coords = cart_coords - np.array([0, 0, minc])
+    lattice[2][2] = maxc - minc + gap
+    slab_bulk = Structure(lattice=lattice, coords=cart_coords, coords_are_cartesian=True, species=slab.species, site_properties=slab.site_properties)
+
+    return slab_bulk
+
+
 def Z_average(structure):
     '''
     Function to calculate average z coordinate for all atoms
