@@ -1,0 +1,504 @@
+#!/bin/bash
+
+temp
+temp
+Filter_command="ls|cat"
+user=$(whoami)
+zdycm=""
+
+# Main (External) Loop - For 1 - Loop through all commands.
+for opt in $@;do
+	# If 1 - Identify command and initialize function.
+	if   [ $Execute_for"te" == "activate" ];then
+		ls >/dev/null
+	elif [ $Execute_file"te" == "activate" ];then
+		Execute_file=$opt;Execute_for="activa";continue
+	# If 1 - Part 1 - Filter command.
+	elif [ $opt == 'g' ];then
+		Filter_grep="activa";continue
+	elif [ $Filter_grep"te" == "activate" ];then
+		Filter_command=$Filter_command"|grep $opt";Filter_grep="";continue
+	elif [ $opt == 'gv' ];then
+		Filter_grep_v="activa";continue
+	elif [ $Filter_grep_v"te" == "activate" ];then
+		Filter_command=$Filter_command"|grep -v $opt";Filter_grep_v="";continue
+	elif [ $opt == 't' ];then
+		Filter_tail="activa";continue
+	elif [ $Filter_tail"te" == "activate" ];then
+  		Filter_command=$Filter_command"|tail -n $opt";Filter_tail="";continue
+	elif [ $opt == 'h' ];then
+		Filter_head="activa";continue
+	elif [ $Filter_head"te" == "activate" ];then
+		Filter_command=$Filter_command"|head -n $opt";Filter_head="";continue
+	elif [ $opt == 'cat' ];then
+		Filter_cat="activa";continue
+	elif [ $Filter_cat"te" == "activate" ];then
+		Filter_command="cat $opt |grep -v $opt";Filter_cat="";continue
+	elif [ $opt == 'jid' ];then
+		Filter_command='$check_jobs|grep $user|tr -s [:space:]|sed "s/^[ \t]*//"| cut -d " " -f 1|cut -d "." -f 1';continue
+	elif [ $opt == 'dir' ];then
+		Filter_direction="activa";continue
+	elif [ $opt == 'file' ];then
+		Filter_file="activa";continue
+	elif [ $opt == 'con' ];then
+		Filter_com="activa";continue
+	elif [ $opt == 'ncon' ];then
+		Filter_notcom="activa";continue
+	# If 1 - Part 2 - Batch command 1 identify and initialize
+	elif [ $opt == 'count' ];then
+		C101_count="activa"
+	elif [ $opt == 'name' ];then
+		C102_name="activa"
+ 	elif [ $opt == 'del' ];then
+ 		C103_delete="activa"
+ 	elif [ $opt == 'mtd' ];then
+		C104_mtd="activa"
+	elif [ $opt == 'addc' ];then
+		C105_addc="activa"
+	elif [ $opt == 'res' ];then
+		C106_res="activa"
+		res_dir_name="res_"$(pwd |awk -F '/' '{print $NF}')
+		mkdir $res_dir_name
+		mkdir $res_dir_name/Output_file $res_dir_name/Final_structure
+		Filter_command=$Filter_command"|grep -v $res_dir_name"
+	elif [ $opt == 'rmel' ];then
+		C107_rmel="activa"
+	elif [ $opt == 'apot' ];then
+		C108_apot="activa"
+	# If 1 - Part 2 - Batch command 2
+	elif [ $opt == 'run' ];then
+		C201_run="activa";Execute_for="activa";continue
+	elif [ $opt == 'put' ];then
+		C202_put="activa";Execute_for="activa";continue
+	elif [ $opt == 'jgc' ];then
+		C203_jgc="activa";Execute_for="activa";continue
+	elif [ $opt == 'oo' ];then
+		C204_oo="activa";Execute_for="activa";continue
+	elif [ $opt == 'vf' ];then
+		C205_vf="activa";Execute_for="activa";continue
+	elif [ $opt == 'vkit' ];then
+		C206_vkit="activa";Execute_for="activa";continue
+	elif [ $opt == 'resz' ];then
+		C207_resz="activa";Execute_for="activa"
+		res_dir_name="resz_"$(pwd |awk -F '/' '{print $NF}');mkdir $res_dir_name
+		Filter_command=$Filter_command"|grep -v $res_dir_name";continue
+	elif [ $opt == 'adds' ];then
+		C208_adds="activa";Execute_for="activa";continue
+	elif [ $opt == 'cpf' ];then
+		C209_cpf="activa";Execute_file="activa";continue
+	elif [ $opt == 'exist' ];then
+		C210_exist="activa";Execute_for="activa";continue
+	elif [ $opt == 'dsuf' ];then
+		C211_delsuf="activa";Execute_for="activa";continue
+	elif [ $opt == 'cp' ];then
+                C212_cp="activa";Execute_for="activa";continue
+	elif [ $opt == 'sete' ];then
+		C213_sete="activa";Execute_for="activa";continue
+	elif [ $opt == 'cpt' ];then
+		C214_cpt="activa";Execute_file="activa";continue
+	elif [ $opt == 'mtdz' ];then
+		C215_mtdz="activa";Execute_for="activa";continue
+	elif [ $opt == 'runp' ];then
+		C216_runp="activa";Execute_file="activa";continue
+    	elif [ $opt == 'cont' ];then
+        	C217_cont="activa";Execute_for="activa";findt=0;continue
+	elif [ $opt == 'cfee' ];then
+		C218_cfee="activa";Execute_for="activa";continue
+	# If 1 - Part 3 - Batch command 3
+	elif [ $opt == 'setm' ];then
+		C301_setm="activa"
+	elif [ $opt == 'setu' ];then
+		C302_setu="activa"
+	elif [ $opt == 'sed' ];then
+		C303_sed="activa";Execute_file="activa";continue
+	elif [ $opt == 'chgd' ];then
+		C304_chgd="activa";Filter_command=$Filter_command"|grep -v CHGCAR_diffs";mkdir CHGCAR_diffs;Execute_for="activa";continue
+	elif [ $opt == 'zdy' ];then
+		read -r zdycm
+		C305_zdy="activa"
+	fi
+
+	# Internal For - Loop 2 - Loop execution.
+	for i in $(eval $Filter_command);do
+		# If 2 - Perform screening.
+		# If 2 - Part 1 - Filter.
+		if   [ $Filter_direction"te" == "activate" ] && [ ! -d $i ];then
+			continue
+		elif [ $Filter_file"te" == "activate" ] && [ ! -f $i ];then
+			continue
+		elif [ $Filter_com"te" == "activate" ] && [ ! -n "$(jgc com $i)" ];then
+ 			continue
+		elif [ $Filter_notcom"te" == "activate" ] && [ -n "$(jgc com $i)" ];then
+			continue
+		# If 2 - Part 2 - Batch command 1
+		elif [ $C101_count"te" == "activate" ];then
+			let "quantity=quantity+1"
+		elif [ $C102_name"te" == "activate" ];then
+			echo $i
+ 		elif [ $C103_delete"te" == "activate" ];then
+			rm -rf $i
+		elif [ $C104_mtd"te" == "activate" ];then
+			mv $i POSCAR;mkdir $i;mv POSCAR $i/;cp $i/POSCAR $i/POSCARoo
+		elif [ $C105_addc"te" == "activate" ];then
+			cd $i;echo " reached required accuracy - stopping structural energy minimisation" >> OUTCAR;cd ..
+		elif [ $C106_res"te" == "activate" ];then
+			mkdir $res_dir_name/Output_file/$i
+			cd $i
+			cp POSCAR CONTCAR INCAR KPOINTS OSZICAR ../$res_dir_name/Output_file/$i/
+			cp CONTCAR ../$res_dir_name/Final_structure/$i".vasp"
+			awk -v i=-1 '/POSITION/ {print "structure " ++i} /energy  without/ {print $7} /POSITION/,/drift/ {if($1~/^[0-9.]+$/&&$3>=fix) print $1,$2,$3,$4,$5,$6}' OUTCAR > efdata
+			cp efdata ../$res_dir_name/Output_file/$i
+			tail -n 666 OUTCAR > ../$res_dir_name/Output_file/$i/OUTCAR
+			if [ -f POSCARoo ];then
+				cp POSCARoo ../$res_dir_name/Output_file/$i
+			fi
+			if [ -f ther_info ];then
+				cp ther_info ../$res_dir_name/Output_file/$i
+			fi
+			if [ -f output ];then
+				cp output ../$res_dir_name/Output_file/$i
+			fi
+			cd ..
+		elif [ $C107_rmel"te" == "activate" ];then
+			echo $i
+			nr=$(wc -l $i|cut -d " " -f 1)
+			cl1=$(sed -n '9p' $i|grep 'F');cl2=$(sed -n '9p' $i|grep 'T')
+			if [ -n "$cl1" ] || [ -n "$cl2" ];then
+				nh=8
+			else
+				nh=9
+			fi
+			head -$nh $i > $i"_head"
+			sed -i 's/
+//g' $i"_head"
+			let nt=nr-nh
+			tail -$nt $i > $i"_tail"
+			cut -d " " -f 1,2,3,4,5,6 $i"_tail" > f_tail
+			cat $i"_head" f_tail > $i
+			rm $i"_tail";rm $i"_head";rm f_tail
+		elif [ $C108_apot"te" == "activate" ];then
+			cd $i;j=1
+			if [ -f POTCAR ];then
+				rm POTCAR
+			fi
+			sed -i "s/\r//" POSCAR
+			ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j);ff=""
+			while [ -n "$ele" ] && [ "$ff" != "$ele" ] ;do
+				if [ $ele == "Zr" ];then
+					ele="Zr_sv"
+				elif [ $ele == "Y" ];then
+					ele="Y_sv"
+				elif [ $ele == "Nb" ];then
+					ele="Nb_pv"
+				fi
+				cat $Pot_path/$ele/POTCAR >> POTCAR
+				j=$[j+1]
+				ff=$ele
+				ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+			done
+			cd ..
+ 		# If 2 - Part 3 - Batch command 2
+		elif [ $C201_run"te" == "activate" ];then
+			if [ -d $i ];then
+				cd $i;jrunj $opt;cd ..
+			fi
+		elif [ $C202_put"te" == "activate" ];then
+			cd $i
+			j=1
+			pcf="";pcb=$(echo $opt|cut -d ',' -f $j)
+			while [ -n "$pcb" ] && [ "$pcb" != "$pcf" ];do
+				put $pcb
+				pcf=$pcb
+				j=$[j+1]
+				pcb=$(echo $opt|cut -d ',' -f $j)
+			done
+			cd ..
+		elif [ $C203_jgc"te" == "activate" ];then
+			cd $i
+			printf ">-=>-=>-=>-=>-=>-=>-=>+>+> : %-26s \n" $i
+			j=1
+			cc_n=$(echo $opt|cut -d ',' -f $j);cc_o=""
+			while [ -n "$cc_n" ] && [ "$cc_o" != "$cc_n" ];do
+				jgc $cc_n
+			 	cc_o=$cc_n
+				j=$[j+1]
+				cc_n=$(echo $opt|cut -d ',' -f $j)
+			done
+			cd ..
+		elif [ $C204_oo"te" == "activate" ];then
+			if   [ $opt == 'm' ];then
+				cd $i;cp POSCAR POSCARoo;cd ..
+			elif [ $opt == 'r' ];then
+				cd $i;cp POSCARoo POSCAR;cd ..
+			elif [ $opt == 'c' ];then
+				cd $i;if [ ! -f POSCARoo ];then echo "WARNING !!! POSCARoo not exists in $i";fi;cd ..
+			fi
+		elif [ $C205_vf"te" == "activate" ];then
+			echo " --- $i"
+			if [ $opt == 'i' ];then
+				if [ -f $i/INCAR ] && [ -f $i/POSCAR ] && [ -f $i/POTCAR ] && [ -f $i/KPOINTS ];then
+					echo VASP input files are ready
+				else
+					echo warning !!! Missing input files
+				fi
+			elif [ $opt == 'r' ];then
+				if [ -f $i/OSZICAR ];then
+					echo OSZICAR exists. The job runs normally.
+				else
+					echo warning !!! OSZICAR losts. job did not start.
+				fi
+			elif [ $opt == 'c' ];then
+				cd $i;cp CONTCAR POSCAR;cd ..
+			fi
+		elif [ $C206_vkit"te" == "activate" ];then
+			cd $i
+			j=1
+			kcf="";kcb=$(echo $opt|cut -d ',' -f $j)
+			while [ -n "$kcb" ] && [ "$kcb" != "$kcf" ];do
+				if   [ $kcb == 'p' ];then 
+					echo -e "1\n103\n" | vaspkit >/dev/null
+				elif [ $kcb == 't' ];then
+					echo -e "5\n501\n298.15\n" | vaspkit > ther_info
+				elif [ $kcb == 'f' ];then
+					echo -e "4\n402\n1\n0.6\n4\n" | vaspkit > /dev/null
+					mv POSCAR_FIX POSCAR
+				elif [ $kcb == 'm6' ];then
+					echo -e "1\n102\n1\n0.06\n" | vaspkit > /dev/null
+				elif [ $kcb == 'm5' ];then
+					echo -e "1\n102\n1\n0.05\n" | vaspkit > /dev/null
+				elif [ $kcb == 'm4' ];then
+					echo -e "1\n102\n1\n0.04\n" | vaspkit > /dev/null
+				elif [ $kcb == 'm3' ];then
+					echo -e "1\n102\n1\n0.03\n" | vaspkit > /dev/null
+				elif [ $kcb == 'm2' ];then
+					echo -e "1\n102\n1\n0.02\n" | vaspkit > /dev/null
+				elif [ $kcb == 'm1' ];then
+					echo -e "1\n102\n1\n0.01\n" | vaspkit > /dev/null
+				elif [ $kcb == 'g6' ];then
+					echo -e "1\n102\n2\n0.06\n" | vaspkit > /dev/null
+				elif [ $kcb == 'g5' ];then
+					echo -e "1\n102\n2\n0.05\n" | vaspkit > /dev/null
+				elif [ $kcb == 'g4' ];then
+					echo -e "1\n102\n2\n0.04\n" | vaspkit > /dev/null
+				elif [ $kcb == 'g3' ];then
+					echo -e "1\n102\n2\n0.03\n" | vaspkit > /dev/null
+				elif [ $kcb == 'g2' ];then
+					echo -e "1\n102\n2\n0.02\n" | vaspkit > /dev/null
+				elif [ $kcb == 'g1' ];then
+					echo -e "1\n102\n2\n0.01\n" | vaspkit > /dev/null
+				elif [ $kcb == 'g0' ];then
+					echo -e "1\n102\n2\n0.00\n" | vaspkit > /dev/null
+				fi
+				kcf=$kcb
+				j=$[j+1]
+				kcb=$(echo $opt|cut -d ',' -f $j)
+			done
+			cd ..
+		elif [ $C207_resz"te" == "activate" ];then
+			mkdir $res_dir_name/$i
+			j=1
+			fib=$(echo $opt|cut -d ',' -f $j);fif=""
+			while [ -n "$fib" ] && [ "$fib" != "$fif" ];do
+				cp $i/$fib $res_dir_name/$i/
+				fif=$fib
+				j=$[j+1]
+				fib=$(echo $opt|cut -d ',' -f $j)
+			done
+		elif [ $C208_adds"te" == "activate" ];then
+			mv $i $i$opt
+		elif [ $C209_cpf"te" == "activate" ];then
+			if [ -d $i ] && [ -d $opt$i ];then
+				cp $opt$i/$Execute_file $i/$Execute_file
+			fi
+		elif [ $C210_exist"te" == "activate" ];then
+			if [ ! -d $opt$i ];then
+				echo $i" not exists"
+			fi
+ 		elif [ $C211_delsuf"te" == "activate" ];then
+ 			new_name=$(echo $i|cut -d "$opt" -f 1);mv $i $new_name
+		elif [ $C212_cp"te" == "activate" ];then
+			cp -r $i $opt$i
+		elif [ $C213_sete"te" == "activate" ];then
+			cd $i		
+			j=1;nelect=0
+			sed -i "s/\r//" POSCAR
+			ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+			elen=$(head -7 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+			while [ -n "$ele" ];do
+				nele_ele=$(grep ZVAL POTCAR -m $j|tail -n 1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f 6)
+				nelect=$(echo "$nelect+$elen*$nele_ele"|bc)
+				j=$[j+1]
+				ele_old=$ele
+				ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+				elen=$(head -7 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+				if [ "$ele_old" == "$ele" ];then
+					break
+				fi
+			done
+			nelect=$(echo "$nelect+$opt"|bc)
+			sed -i "s/# NELECT =/  NELECT = $nelect/" INCAR
+			cd ..
+		elif [ $C214_cpt"te" == "activate" ];then
+			cp $i/$Execute_file $opt$i
+		elif [ $C215_mtdz"te" == "activate" ];then
+			mv $i $opt;mkdir $i;mv $opt $i
+		elif [ $C216_runp"te" == "activate" ];then
+			while((1));do
+				if [ ! -d $i ];then
+					break
+				fi
+				jobs_amount=$(eval $check_jobs|grep $user|wc -l)
+				if [ $jobs_amount -lt $Execute_file ];then
+					cd $i
+					let "rcount=rcount+1"
+					jrunj $opt >/dev/null
+					echo -e "$rcount\t $(date)\t $i"
+					cd ..
+					break
+				else
+					sleep 60s
+				fi
+			done
+        	elif [ $C217_cont"te" == "activate" ];then
+            		if [ "$findt" == "0" ];then
+                		let "q=q+1"
+            		fi
+            		if [ "$i" == "$opt" ];then
+                		findt=1
+            		fi
+		elif [ $C218_cfee"te" == "activate" ];then
+			if [ ! -s $i/$opt ];then
+				echo $i
+			fi
+		# if 2 - Part 4 - Batch command 3
+		elif [ $C301_setm"te" == "activate" ];then
+			cd $i;sed -i 's/# ISPIN = 2/  ISPIN = 2/g' INCAR;j=1;magmom=""
+			sed -i "s/\r//" POSCAR
+			ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+			elen=$(head -7 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+			while [ -n "$ele" ];do
+				if   [ "$ele" == "Fe" -o "$ele" == "Cr" -o "$ele" == "Mo" ];then
+					magmom=$magmom" $elen*4.0"
+				elif [ "$ele" == "Ni" -o "$ele" == "Co" ];then
+					magmom=$magmom" $elen*3.0"
+				else
+					magmom=$magmom" $elen*0.0"
+				fi
+				j=$[j+1]
+				ele_old=$ele
+				ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+				elen=$(head -7 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+				if [ "$ele_old" == "$ele" ];then
+					break
+				fi
+			done
+			sed -i "s/# MAGMOM =/  MAGMOM =$magmom/" INCAR
+			cd ..
+		elif [ $C302_setu"te" == "activate" ];then
+			cd $i
+			sed -i 's/# LDAU = T/  LDAU = T/g' INCAR
+			sed -i 's/# LDAUTYPE = 2/  LUADTYPE = 2/g' INCAR
+			j=1;ul="";uu="";uj=""
+			sed -i "s/\r//" POSCAR
+			ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+			while [ -n "$ele" ];do
+				if [ "$ele" == "Mo" ];then
+					ul=$ul" 3";uu=$uu" 3.9";uj=$uj" 0.0"
+				elif [ "$ele" == "Ni" ];then
+					ul=$ul" 3";uu=$uu" 4.2";uj=$uj" 0.0"
+				elif [ "$ele" == "Pd" ];then
+					ul=$ul" 3";uu=$uu" 3.3";uj=$uj" 0.0"
+				else
+					ul=$ul" -1";uu=$uu" 0.0";uj=$uj" 0.0"
+				fi
+				j=$[j+1]
+				ele_old=$ele
+				ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+				if [ "$ele_old" == "$ele" ];then
+					break
+				fi
+			done
+			sed -i "s/# LDAUL =/  LUADL =$ul/" INCAR
+			sed -i "s/# LDAUU =/  LUADU =$uu/" INCAR
+			sed -i "s/# LDAUJ =/  LUADJ =$uj/" INCAR
+			cd ..
+		elif [ $C303_sed"te" == "activate" ];then
+			sed_a=$(echo "$@"|cut -d ';' -f 2);sed_b=$(echo "$@"|cut -d ';' -f 3)
+			cd $i;sed -i "s/$sed_a/$sed_b/" $Execute_file;cd ..
+		elif [ $C304_chgd"te" == "activate" ];then
+			dir_slab=$(echo "$@"|cut -d '|' -f 2);dir_adsb=$(echo "$@"|cut -d '|' -f 3);echo "------>"$i
+			chgsum.pl ../$dir_slab/$i".slab"/CHGCAR ../$dir_adsb/$i".adsb"/CHGCAR
+			chgdiff.pl $i/CHGCAR CHGCAR_sum;rm CHGCAR_sum;mv CHGCAR_diff CHGCAR_diffs/"CHGDIFF_"$i".vasp"
+		elif [ $C305_zdy"te" == "activate" ];then
+			eval $zdycm
+		fi
+	done
+
+	# If 3 - End function.
+	# If 3 - Part 1 - Batch command 1
+	if   [ $C101_count"te" == "activate" ];then
+		echo "Total number of files/directions is $quantity.";C101_count=""
+	elif [ $C102_name"te" == "activate" ];then
+		C102_name=""
+ 	elif [ $C103_delete"te" == "activate" ];then
+ 		C103_delete=""
+	elif [ $C104_mtd"te" == "activate" ];then
+		C104_mtd=""
+	elif [ $C105_addc"te" == "activate" ];then
+		C105_addc=""
+	elif [ $C106_res"te" == "activate" ];then
+		C106_res=""
+	elif [ $C107_rmel"te" == "activate" ];then
+		C107_rmel=""
+	elif [ $C108_apot"te" == "activate" ];then
+		C108_apot=""
+	# If 3 - Part 2 - Batch command 2
+	elif [ $C201_run"te" == "activate" ];then
+		C201_run="";Execute_for=""
+	elif [ $C202_put"te" == "activate" ];then
+		C202_put="";Execute_for=""
+	elif [ $C203_jgc"te" == "activate" ];then
+		C203_jgc="";Execute_for=""
+	elif [ $C204_oo"te" == "activate" ];then
+		C204_oo="";Execute_for=""
+	elif [ $C205_vf"te" == "activate" ];then
+		C205_vf="";Execute_for=""
+	elif [ $C206_vkit"te" == "activate" ];then
+		C206_vkit="";Execute_for=""
+	elif [ $C207_resz"te" == "activate" ];then
+		C207_resz="";Execute_for=""
+	elif [ $C208_adds"te" == "activate" ];then
+		C208_adds="";Execute_for=""
+	elif [ $C209_cpf"te" == "activate" ];then
+		C209_cpf="";Execute_for="";Execute_file=""
+	elif [ $C210_exist"te" == "activate" ];then
+		C210_exist="";Execute_for=""
+	elif [ $C211_delsuf"te" == "activate" ];then
+		C211_delsuf="";Execute_for=""
+	elif [ $C212_cp"te" == "activate" ];then
+		C212_cp="";Execute_for=""
+	elif [ $C213_sete"te" == "activate" ];then
+		C213_sete="";Execute_for=""
+	elif [ $C214_cpt"te" == "activate" ];then
+		C214_cpt="";Execute_for="";Execute_file=""
+	elif [ $C215_mtdz"te" == "activate" ];then
+		C215_mtdz="";Execute_for=""
+	elif [ $C216_runp"te" == "activate" ];then
+		C216_runp="";Execute_for="";Execute_file=""
+	elif [ $C217_cont"te" == "activate" ];then
+    		C217_cont="";Execute_for="";echo "$opt is the $q file/dir"
+	elif [ $C218_cfee"te" == "activate" ];then
+		C218_cfee="";Execute_for=""
+	# if 3 - Part 3 - Batch command 3
+	elif [ $C301_setm"te" == "activate" ];then
+		C301_setm=""
+	elif [ $C302_setu"te" == "activate" ];then
+		C302_setu=""
+	elif [ $C303_sed"te" == "activate" ];then
+		C303_sed="";Execute_for="";Execute_file=""
+	elif [ $C304_chgd"te" == "activate" ];then
+		C304_chgd="";Execute_for=""
+	elif [ $C305_zdy"te" == "activate" ];then
+		C305_zdy=""
+	fi
+done

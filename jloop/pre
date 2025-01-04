@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# path
+temp
+usevim=0
+preput=0
+prerun=0
+for i in $@
+do
+# check file
+if [ $i == "-c" ];then
+	ls $pathjloop/files --color=auto
+# vi file
+elif [ $i == "-v" ];then
+	usevim=1
+elif [ $usevim == "1" ];then
+	vim $pathjloop/files/$i 
+	usevim=0
+# make put file and order
+elif [ $i == "-p" ];then
+	preput=1
+elif [ $preput == "1" ];then
+	file_name=$i
+	preput=2
+elif [ $preput == "2" ];then
+	file_com=$i
+	preput=3
+elif [ $preput == "3" ];then
+	cp $file_name $pathjloop/files/
+	sed -i "/esac/{
+        i\\\"$file_com\")
+        i\\file=$file_name
+	i\\filet=$i
+	i\\;;
+        }" $pathjloop/put
+	preput=0
+# make run file and order
+elif [ $i == "-r" ];then
+	prerun=1
+elif [ $prerun == "1" ];then
+	file_name=$i
+	prerun=2
+elif [ $prerun == "2" ];then
+	cp $file_name $pathjloop/files/
+	sed -i "/esac/{
+        i\\\"$i\")
+        i\\run_file=$file_name
+	i\\;;
+        }" $pathjloop/jrunj
+	prerun=0
+fi
+done

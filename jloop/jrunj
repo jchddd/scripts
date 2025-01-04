@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# path
+temp
+log_name=run_log
+current_path=$(pwd)
+job_id=0
+# cp file
+case "$1" in
+esac
+cp $pathjloop/files/$run_file $current_path
+# run job
+system_type=$(echo $run_file | awk -F . '{print $NF}')
+if [ $system_type == 'pbs' ];then
+	qsub $run_file | tee tmp_log
+elif [ $system_type == 'sh' ];then
+	sbatch $run_file | tee tmp_log
+fi
+# write log
+job_id=$( cat tmp_log | cut -f 1 -d "." )
+rm tmp_log
+echo "   Job Id  : $job_id" >> $pathjloop/files/$log_name
+echo "    Date   : $(date)" >> $pathjloop/files/$log_name 
+echo " Work Path : $current_path" >> $pathjloop/files/$log_name
+echo " Pbs Files : $1 $2 $3 $4 == $vasp_pbs_file" >> $pathjloop/files/$log_name
+echo "-------------------------------------------------------------" >> $pathjloop/files/$log_name

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#path
+temp
+
+case "$1" in
+
+"-c")
+ls $pathjloop --color=auto
+;;
+
+"")
+ls $pathjloop --color=auto
+read -p "input the name of files you wang to check : " filename
+vim $pathjloop/$filename
+;;
+
+esac

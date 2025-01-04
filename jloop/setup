@@ -1,0 +1,31 @@
+#!/bin/bash
+
+pot_path=~/POTCAR
+check_jobs=qstat
+cur_path=$(pwd)
+
+# add permission
+for i in $(ls $qxpath | cat);do
+	if [ ! -d $i ];then
+		chmod 777 $cur_path/$i
+	fi
+done
+
+# compelete scripts
+# put
+sed -i "4s|temp|pathjloop=$cur_path|" put
+# pre
+sed -i "4s|temp|pathjloop=$cur_path|" pre
+# runj
+sed -i "4s|temp|pathjloop=$cur_path|" jrunj
+# sw
+sed -i "4s|temp|pathjloop=$cur_path|" sw
+# clog
+sed -i "3s|temp|vim $cur_path/files/run_log|" clog
+# jloop
+sed -i "3s|temp|Pot_path=$pot_path|" jloop
+sed -i "4s|temp|check_jobs=$check_jobs|" jloop
+
+# add environment variable
+echo "export PATH=$cur_path:\$PATH" >> ~/.bashrc
+source ~/.bashrc

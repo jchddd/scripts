@@ -1,0 +1,63 @@
+#!/bin/bash
+
+case $1 in
+
+"energy")
+grep 'energy  without' OUTCAR | tail -1
+;;
+
+"mag")
+grep mag OSZICAR | tail -1
+;;
+
+"fermi")
+grep E-fermi OUTCAR
+;;
+
+"com")
+grep 'reached required accuracy' OUTCAR
+;;
+
+"numberk")
+grep irre OUTCAR
+;;
+
+"fre")
+grep meV OUTCAR
+;;
+
+"frei")
+grep 'f/i=' OUTCAR
+;;
+
+"freni")
+grep 'f  =' OUTCAR
+;;
+
+"pot")
+grep TITEL POTCAR
+grep ENMAX POTCAR
+;;
+
+"enmax")
+grep ENMAX POTCAR
+;;
+
+"fs") 
+grep 'd E' OSZICAR | tail -1
+;;
+
+"es")
+grep '1 F' -B 2 OSZICAR | head -1
+;;
+
+"k")
+grep k-mesh -A 1 OUTCAR | tail -n -1
+;;
+
+"t")
+grep Elapsed OUTCAR
+grep 'CPU time' OUTCAR
+;;
+
+esac

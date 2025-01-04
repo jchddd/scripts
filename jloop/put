@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# path
+temp
+puto=$(pwd)
+# get file name
+case "$1" in
+"k")
+file=KPOINTS
+filet=KPOINTS
+;;
+"i")
+file=INCAR
+filet=INCAR
+;;
+esac
+# put file
+cp $pathjloop/files/$file $puto/$filet
+

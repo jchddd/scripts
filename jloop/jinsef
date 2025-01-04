@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if grep -iq "Selective dynamics" POSCAR; then
+	max_z=$(awk 'NR>9 && /F/ { if ($3 > max) max = $3 } END { print max }' max=0 POSCAR)
+	coor_type=$(awk 'NR==9 {print substr($0, 1, 1)}' POSCAR)
+	if   [[ $coor_type == [Dd] ]];then
+		z_length=$(awk 'NR==5 {print $3}' POSCAR)
+		fix=$(echo "$max_z * $z_length" |bc -l)
+	elif [[ $coor_type == [Cc] ]];then
+		fix=$(max_z)
+	fi
+fi
+fix=$(echo "$fix + 0.6" | bc -l)
+
+awk '/E0/ {print $1 " " $5 }' OSZICAR > e0.conv
+
+awk -v fix="$fix" '/POSITION/,/drift/{if($1~/^[0-9.]+$/&&$3>=fix) print $1,$2,$3,sqrt($4*$4+$5*$5+$6*$6i);else if($1=="total") print $0}' OUTCAR > temp.f
+awk '{if($1=="total") {print ++i,a;a=0}else {if(a<$4) a=$4}}' temp.f >force.conv
+
+paste e0.conv force.conv > check.conv
+awk 'BEGIN {printf "---------------------------\n"
+            printf "Index   Energy    Max Force\n"
+            printf "---------------------------\n"} 
+{printf "%3d   %10.5f   %7.5f\n",$1, $2, $4}
+     END   {printf "---------------------------\n"}' check.conv
+
+rm e0.conv temp.f force.conv check.conv
