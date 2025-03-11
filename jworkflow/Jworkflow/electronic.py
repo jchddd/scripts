@@ -3,8 +3,11 @@ from pymatgen.electronic_structure.cohp import CompleteCohp
 from pymatgen.io.vasp.outputs import Locpot, Chgcar
 from pymatgen.io.lobster import Doscar
 from pymatgen.io.vasp import Vasprun
+from pymatgen.core import Element
 from scipy.signal import hilbert
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 def get_chgcar_distrib(chgcar_file, axis):
@@ -58,6 +61,30 @@ def get_locpot_z_distrib(Locpot_file):
     locpot = Locpot.from_file(Locpot_file)
     return locpot.get_average_along_axis(2)
 
+name_to_value_orbital = {
+    's': 0,
+    'py': 1,
+    'pz': 2,
+    'px': 3,
+    'dxy': 4,
+    'dyz': 5,
+    'dz2': 6,
+    'dxz': 7,
+    'dx2': 8,
+    'f_3': 9,
+    'f_2': 10,
+    'f_1': 11,
+    'f_0': 12,
+    'f1': 13,
+    'f2': 14,
+    'f3': 15,
+}
+name_to_value_orbitaltype = {
+    's': 0,
+    'p': 1,
+    'd': 2,
+    'f': 3,
+}
 
 class DOS_Process():
     '''
@@ -322,8 +349,105 @@ class DOS_Process():
                 elif formula == 'DOS*Fermi-Dirac*-1':
                     result += delta_E * abs(DOS[i]) * (np.exp(E[i] / ExtraValue) + 1) ** (-2) * np.exp(E[i] / ExtraValue) * 1 / ExtraValue
         return result
-
-
+        
+    def get_dos(self, dos_typ, sigma=None):
+        '''
+        Quickly grab the desired density state density
+    
+        Parameters:
+            - dos_typ: The state density feature you want to grab. If there is a spin, it's automatically divided into up and down / list
+              Use the following 7 mode strings to define the required state density information:
+              'tot': total dos; 'tot-p': total p dos; 'Pd_Ni-tot': tot dos of Ni and Pd element; 'Ni-d': d dos of Ni element
+              '6_7_8_9_10-tot': total dos of site 6 ~ 10; '6-f': f dos of site 6; '0_6-dyz' dyz dos of site 6 and 0
+              input including a required dos infor and a label name of it, e.g. [(7_8-d, Ni-d)]
+            - sigma: / float or None, default = None
+        '''
+        complete_dos = self.xml.complete_dos
+        structure = self.xml.final_structure
+    
+        self.dos_name = []
+        self.dos_data = {}
+        self.dos_data['energies'] = complete_dos.energies - complete_dos.efermi
+        
+        for (di, dn) in dos_typ:
+            if '-' in di:
+                obj, ort = di.split('-')
+            doses = []
+            if   di == 'tot':
+                doses.append(complete_dos) 
+            elif obj == 'tot':
+                doses.append(complete_dos.get_spd_dos()[OrbitalType(name_to_value_orbitaltype[ort])])
+            elif obj[0].isalpha() and ort == 'tot':
+                for ele in obj.split('_'):
+                    doses.append(complete_dos.get_element_dos()[Element(ele)])
+            elif obj[0].isalpha() and ort.isalpha():
+                for ele in obj.split('_'):
+                    doses.append(complete_dos.get_element_spd_dos(Element(ele))[OrbitalType(name_to_value_orbitaltype[ort])])
+            elif obj[0].isdigit() and ort == 'tot':
+                for site in obj.split('_'):
+                    doses.append(complete_dos.get_site_dos(structure[int(site)]))
+            elif obj[0].isdigit() and len(ort) == 1:
+                for site in obj.split('_'):
+                    doses.append(complete_dos.get_site_spd_dos(structure[int(site)])[OrbitalType(name_to_value_orbitaltype[ort])])
+            elif obj[0].isdigit() and len(ort) > 1:
+                for site in obj.split('_'):
+                    doses.append(complete_dos.get_site_orbital_dos(structure[int(site)], Orbital(name_to_value_orbital[ort])))
+    
+            for i in range(len(doses)):
+                doses[i] = doses[i].densities if sigma is None else doses[i].get_smeared_densities(sigma)
+            if self.ispin:
+                dos_up = [dos[Spin.up] for dos in doses]
+                dos_up = np.sum(dos_up, axis=0)
+                dos_down = [dos[Spin.down] for dos in doses]
+                dos_down = -1 * np.sum(dos_down, axis=0)
+                self.dos_data[dn + '-up'] = dos_up
+                self.dos_data[dn + '-down'] = dos_down
+            else:
+                dos = [dos[Spin.up] for dos in doses]
+                dos = np.sum(dos, axis=0)
+                self.dos_data[dn] = dos
+            self.dos_name.append(dn)
+    
+    def plot_dos(self):
+        '''
+        Plot DOS. It can only be used after get_dos has been executed.
+        '''
+        plt.figure(figsize=(12, 6))
+        energies = self.dos_data['energies']
+    
+        ymax = 0
+        ymin = 0
+        for dos_name in self.dos_name:
+            if self.ispin:
+                dos = np.concatenate([self.dos_data[dos_name + '-up'], np.flip(self.dos_data[dos_name + '-down'])])
+                plt.plot(np.concatenate([energies, np.flip(energies)]), dos, label=dos_name)
+            else:
+                dos = self.dos_data[dos_name]
+                plt.plot(energies, dos, label=dos_name)
+            if np.max(dos) > ymax:
+                ymax = np.max(dos)
+            if np.min(dos) <ymin:
+                ymin = np.min(dos)
+        plt.plot([np.min(energies), np.max(energies)], [0, 0], color='k', zorder=6)
+        y_length = ymax - ymin
+        plt.plot([0, 0], [ymin - y_length *0.06, ymax + y_length * 0.06], color='k', ls='--', zorder=-6)
+        plt.ylim([ymin - y_length *0.06, ymax + y_length * 0.06])
+        plt.legend()
+        plt.xlabel('Energy - Fermi level (eV)')
+        plt.ylabel('DOS (States/eV)')
+        plt.show()
+    
+    def write_csv(self, csv):
+        '''
+        Write DOS data to a csv file. It can only be used after get_dos has been executed.
+    
+        Parameters:
+            - csv: the csv file / file path
+        '''
+        df = pd.DataFrame.from_dict(self.dos_data)
+        df.to_csv(csv)
+    
+    
 class Lobster_PProcess():
     '''
     Class to draw data from Lobster outputs by pymatgen
@@ -333,6 +457,7 @@ class Lobster_PProcess():
         - show_bonds: Function to show the bonds in COXPCAR.lobster file
         - get_coxp: Function to get COXP of Specified label and orbitals
         - get_icohp: Function to get the ICOHP for a specified bond
+        - get_band_properities: Function to use pymatgen to calculate all band properities
         - show_spd_typ: Function to show oribtals on a specified site
         - get_dos: Function to get DOS data
     '''
@@ -406,7 +531,7 @@ class Lobster_PProcess():
                 return self.COXP.get_cohp_by_label(label).as_dict()
             else:
                 return self.COXP.get_orbital_resolved_cohp(label, orbitals).as_dict()
-                
+    
     def get_icohp(self, label):
         '''
         Function to get the ICOHP for a specified bond.
