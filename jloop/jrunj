@@ -22,5 +22,5 @@ rm tmp_log
 echo "   Job Id  : $job_id" >> $pathjloop/files/$log_name
 echo "    Date   : $(date)" >> $pathjloop/files/$log_name 
 echo " Work Path : $current_path" >> $pathjloop/files/$log_name
-echo " Pbs Files : $1 $2 $3 $4 == $vasp_pbs_file" >> $pathjloop/files/$log_name
+echo " Pbs Files : $1 == $run_file" >> $pathjloop/files/$log_name
 echo "-------------------------------------------------------------" >> $pathjloop/files/$log_name
