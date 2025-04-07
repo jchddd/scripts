@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ $1 == 'jhelp' ];then
-	echo "--- --- --- --- --- --- --- --- --- --- PUT --- --- --- --- --- --- --- --- --- ---|"
+	echo "--- --- --- --- --- --- --- --- --- ---JHELP--- --- --- --- --- --- --- --- --- ---|"
 	echo "Show help information for jloop scripts, e.g. jhelp jhelp                          |"
 	echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
 elif [ $1 == 'put' ];then
@@ -15,17 +15,18 @@ elif [ $1 == 'sw' ];then
 	echo "Quickly view and edit jloop scripts. e.g. sw, and then input a script name like put|"
 	echo "=->=->: Default Command --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
 	echo " -c : check all jloop script names                                                 |"
+        echo "    : faster vim jloop scripts                                                     |"
 	echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
 elif [ $1 == 'pre' ];then
-	echo "--- --- --- --- --- --- --- --- --- --- PRE --- --- --- --- --- --- --- --- --- ---|"
-	echo "Copy files to jloop_path/files, so that them can be called by put and runj scripts |"
-	echo "=->=->: Default Command --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
-	echo " -c : check all files in jloop_path/files                                          |"
-	echo " -v : vim a file in jloop_path/files. e.g. pre -v INCAR                            |"
-	echo " -p : e.g. pre xx k yy Copy xx to jloop_path, modify put, then put k is available  |"
-	echo "    : then put k is available to copy xx from jloop_path to current_path/yy        |"
-	echo " -r : e.g. pre xx k  Copy xx to jloop_path, modify runj, then runj k is available  |"
-	echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
+	echo "--- --- --- --- --- --- --- --- --- --- PRE --- --- --- --- --- --- --- --- --- --- ---|"
+	echo "Copy files to jloop_path/files, so that them can be called by put and runj scripts     |"
+	echo "=->=->: Default Command --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
+	echo " -c : check all files in jloop_path/files                                              |"
+	echo " -v : vim a file in jloop_path/files. e.g. pre -v INCAR                                |"
+	echo " -p : e.g. pre -p xx k yy Copy xx to jloop_path, modify put, then put k is available   |"
+	echo "    : then put k is available to copy xx from jloop_path to current_path/yy            |"
+	echo " -r : e.g. pre -r xx k  Copy xx to jloop_path, modify runj, then runj k is available   |"
+	echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
 elif [ $1 == 'runj' ];then
 	echo "--- --- --- --- --- --- --- --- --- --- RUNJ--- --- --- --- --- --- --- --- --- ---|"
 	echo "Run jobs with submit scripts store in jloop_path/files and write a job record      |"
