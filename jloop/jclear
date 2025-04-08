@@ -1,0 +1,45 @@
+#!/bin/bash
+
+directory="./"
+retain_files=()
+remove_files=()
+
+while getopts "d:f:ir" opt; do
+	case $opt in
+		d)
+			directory=$OPTARG
+		;;
+		f)
+			if [ "$OPTARG" == "vasp" ]; then
+				retain_keys=("POSCAR" "INCAR" "KPOINTS" "POTCAR")
+			fi
+			
+			while IFS= read -r -d '' file; do
+				filename=$(basename "$file")
+				retain=false
+				for key_str in "${retain_keys[@]}"; do
+					if [[ "$filename" == *"$key_str"* ]]; then
+						retain=true
+						break
+					fi
+				done
+				if $retain; then
+					retain_files+=("$filename")
+				else 
+					remove_files+=("$filename")
+				fi
+			done < <(find "$directory" -type f -print0)
+		;;
+		i)
+		echo "get ${#remove_files} remove files"
+		echo "${remove_files[@]}"
+		echo "get ${#retain_files} retain files"
+		echo "${retain_files[@]}"
+		;;
+		r)
+		for remove_file in ${remove_files[@]};do
+			rm -f $directory$remove_file
+		done
+		;;
+	esac
+done

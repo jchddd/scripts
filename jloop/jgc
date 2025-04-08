@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ ! $2 ];then
+ path="."
+else
+ path=$2
+fi
+
 case $1 in
 
 "energy")
@@ -15,7 +21,7 @@ grep E-fermi OUTCAR
 ;;
 
 "com")
-grep 'reached required accuracy' OUTCAR
+grep 'reached required accuracy' $path"/"OUTCAR
 ;;
 
 "numberk")

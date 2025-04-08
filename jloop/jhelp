@@ -15,7 +15,6 @@ elif [ $1 == 'sw' ];then
 	echo "Quickly view and edit jloop scripts. e.g. sw, and then input a script name like put|"
 	echo "=->=->: Default Command --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
 	echo " -c : check all jloop script names                                                 |"
-        echo "    : faster vim jloop scripts                                                     |"
 	echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
 elif [ $1 == 'pre' ];then
 	echo "--- --- --- --- --- --- --- --- --- --- PRE --- --- --- --- --- --- --- --- --- --- ---|"
@@ -28,7 +27,7 @@ elif [ $1 == 'pre' ];then
 	echo " -r : e.g. pre -r xx k  Copy xx to jloop_path, modify runj, then runj k is available   |"
 	echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
 elif [ $1 == 'runj' ];then
-	echo "--- --- --- --- --- --- --- --- --- --- RUNJ--- --- --- --- --- --- --- --- --- ---|"
+	echo "--- --- --- --- --- --- --- --- --- ---JRUNJ--- --- --- --- --- --- --- --- --- ---|"
 	echo "Run jobs with submit scripts store in jloop_path/files and write a job record      |"
 	echo "e.g. runj k  Use submit scripts corresponding to k to run, pre -r xx.sh k first    |"
 	echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
@@ -39,6 +38,16 @@ elif [ $1 == 'clog' ];then
 elif [ $1 == 'jinsef' ];then
 	echo "--- --- --- --- --- --- --- --- --- ---JINSEF-- --- --- --- --- --- --- --- --- ---|"
 	echo "Detect change of energy and convergence if force in the process of ion steps       |"
+	echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
+elif [ $1 == 'jclear' ];then
+	echo "--- --- --- --- --- --- --- --- --- ---JCLEAR-- --- --- --- --- --- --- --- --- ---|"
+	echo "Clear output files and retain input files only. e.g. jclear -f vasp -r             |"
+	echo "=->=->: Default Command --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
+	echo " -d : select job directory. if not specify, default to ./                          |"
+	echo " -f : select input files according to job type, only support vasp job now          |"
+	echo "      e.g. -f vasp This will retain files contain INCAR, POSCAR, KPOINTS, POTCAR   |"
+	echo " -i : echo amount and file number for retain and remove files respectively         |"
+	echo " -r : remove output files                                                          |"
 	echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---|"
 elif [ $1 == 'jgc' ];then
 	echo "--- --- --- --- --- --- --- --- --- --- JGC --- --- --- --- --- --- --- --- --- --- --- ---|"
@@ -101,11 +110,15 @@ elif [ $1 == 'jloop' ];then
 	echo " cpf  : Copy specified file from directions with the same name in another path to current directions|"
 	echo "        e.g. pwd: a(dir), ../cc/INCAR  exc: jloop cpf INCAR ../cc/  res: cp ../cc/a/INCAR a/INCAR   |"
 	echo "        Warn: It is better to use exist to confirm all directions are existed in the another path.  |"
-	echo " cont : Check the number of the specified file. e.g. cont xxx    res: xxx is the n file/dir         |"
+	echo " cont : Check the number (index) of a specified file. e.g. cont xxx res: xxx is the n th file/dir   |"
 	echo " exist: Check if a direction is existed in another path with the same name or not.                  |"
-    echo "        e.g. pwd: a, b(dir/file)  exc: exist ../cc/  res: cc only have dir a, so print b not exists |"
+	echo "        e.g. pwd: a, b(dir/file)  exc: exist ../cc/  res: cc only have dir a, so print b not exists |"
 	echo " cfee : Check if a file existed and is not empty on each directions. If not echo names of those dirs|"
-    echo "        e.g. pwd: a/f b/a  exc: cfee f  res: b  Can only be used to direction objects.              |"
+	echo "        e.g. pwd: a/f b/a  exc: cfee f  res: b  Can only be used to direction objects.              |"
+	echo " forl : Using jinsef to check if the final minimum force of a VASP job is less than a certain value |"
+	echo "        If so, print the direction names of these jobs. e.g. jloop dir forl 0.16 > xxxx             |"
+	echo " nswl : Using jinsef to check if the total ion steps of a VASP job is less than a certain value     |"
+	echo "        If so, print the direction names of these jobs. e.g. jloop dir nswl 36                      |"
 	echo " dsuf : Delete the last suffix in the object names divided by specified character. e.g. dsuf .      |"
 	echo "  cp  : Copy files or directions to another path. e.g. cp ../xxxxxx/                                |"
 	echo " sete : Set NELECT tag in INCAR. NELECT will be total electrons plus a specified value.             |"
@@ -113,9 +126,10 @@ elif [ $1 == 'jloop' ];then
 	echo " cpt  : Copy a specified file in directions to another direction and rename it to the name of the   |"
 	echo "        original directions. pwd: a/CONTCAR  exc: cpt CONTCAR cc/  res: cp a/CONTCAR cc/a.          |"
 	echo " mtdz : Move files to a specified name and put in directions with their file names.                 |"
-	echo "      : e.g. mtdz input  exc: mv files into input, and put them in directions with their names      |"
+	echo "        e.g. mtdz input  exc: mv files into input, and put them in directions with their names      |"
 	echo " runp : Automatically monitors the number of tasks and submits tasks if task number is less than n  |"
-	echo "      : e.g. runp 5 std54  exc: if your job number less than 5, enter each dir and submit std54 job |"
+	echo "        e.g. runp 5 std54  exc: if your job number less than 5, enter each dir and submit std54 job |"
+	echo "        use nohup to submit to backstage. e.g. nohup jloop runp 10 std54 > nohupout 2>&1 &          |" 
 	echo "=->=->: Batch Command 3 ---With complex parameters or script modification-- --- --- --- --- --- --- |"
 	echo " setm : Set mag tag in INCAR. Magnetic moment of each element can be modified inside jloop script   |"
 	echo "        Warn: Standard jloop INCAR format should be used.                                           |"
@@ -126,7 +140,7 @@ elif [ $1 == 'jloop' ];then
 	echo " chgd : Auto duel chgdiff. Prepare 3 directions with sub_directions contain CHARCAR for slab, adsb  |"
 	echo "        and both. Assum their names are slab, adsb and all. Add .slab and .adsb suffix on sub_dires |"
  	echo "        under slab and adsb. Enter all, excute chgd '|slab|adsb|'. CHGCAR_diffs dir will be maked.  |"
-	echo ' zdy  : Enter each direction and execute commands. Use $i to represent the grep file/dir name.      |'
+	echo ' zdy  : Execute user-defined commands. Use $i to represent the grep file/dir name.                  |'
 	echo '        e.g. zdy  exc: input the command you want in the input line like cd $i;cp xxxx;cd ..        |'
 	echo "--- --- --- --- --- --- --- --- --- --- --- --- END --- --- --- --- --- --- --- --- --- --- --- --- |"
 fi
