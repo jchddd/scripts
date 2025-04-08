@@ -8,6 +8,7 @@ The core idea is to keep VASP input files and submission scripts in one path. Mo
 - clog: View task submission logs.
 - files: The direction where log files, input files, and scripts are stored.
 - jgc: Grab information from the VASP output file.
+- jclear: Remove output files and retain input files.
 - jhelp: Check help information for each script.
 - jinsef: Check the maximum force and energy changes during VASP convergence.
 - jloop: Perform various batch operations.
