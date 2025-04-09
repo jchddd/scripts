@@ -118,6 +118,7 @@ for opt in $@;do
 	elif [ $opt == 'chgd' ];then
 		C304_chgd="activa";Filter_command=$Filter_command"|grep -v CHGCAR_diffs";mkdir CHGCAR_diffs;Execute_for="activa";continue
 	elif [ $opt == 'zdy' ];then
+                echo 'Enter custom commands, using $i to refer to each selected object'
 		read -r zdycm
 		C305_zdy="activa"
 	fi
