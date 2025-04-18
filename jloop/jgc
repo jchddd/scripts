@@ -54,7 +54,7 @@ grep 'd E' OSZICAR | tail -1
 ;;
 
 "es")
-grep '1 F' -B 2 OSZICAR | head -1
+grep '1 F' -B 1 OSZICAR | head -1
 ;;
 
 "k")
