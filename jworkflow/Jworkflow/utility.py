@@ -45,20 +45,20 @@ def move_file(file_list, move_from, move_to, file_suffix='.vasp', return_ignore=
     if return_ignore:
         return ignore_list
 
-def get_file_or_subdirection(path, type='file'):
+def get_file_or_subdirection(path, typ='file'):
     '''
     Function that gets all subdirectories or files in a specified directory
 
     Parameters:
         - path: Directory where the command is executed / str(path)
-        - type: Return files or subdirectories / str, 'file' or 'dir', default 'file'
+        - typ: Return files or subdirectories / str, 'file' or 'dir', default 'file'
     Return:
         - List of file or direction names
     '''
     for curDir, dirs, files in os.walk(path):
-        if curDir == path and type == 'file':
+        if curDir == path and typ == 'file':
             return files
-        elif curDir == path and type == 'dir':
+        elif curDir == path and typ == 'dir':
             return dirs
 
 def write_list_to_file(list_of_strings, file, file_system='Linux'):
@@ -273,6 +273,49 @@ def num_to_subscript(string, neglect_list=['1']):
             if i + 1 == len(string):
                 str_new += '$_{' + digit_store + '}$'
     return str_new
+
+def phase_name_convert(expression, convert=True):
+    '''
+    Function that converts phase name to Markdown type.
+    
+    Parameters:
+        - expression: str name that need to convert / str
+        - convert (bool): perform convertion. Default = True
+    Return:
+        - The new str after processing
+    Example:
+        - phase_name_convert('ZnO2+2') -> '$ZnO_{2}^{2+}$'
+    '''
+    if not convert:
+        return expression
+        
+    result = ""
+    i = 0
+    while i < len(expression):
+        if expression[i].isalpha():
+            result += expression[i]
+            i += 1
+        elif expression[i].isdigit():
+            start = i
+            while i < len(expression) and expression[i].isdigit():
+                i += 1
+            number = expression[start:i]
+            result += f"_{{{number}}}"
+        elif expression[i] in "+-":
+            sign = expression[i]
+            i += 1
+            if i < len(expression) and expression[i].isdigit():
+                start = i
+                while i < len(expression) and expression[i].isdigit():
+                    i += 1
+                number = expression[start:i]
+                result += f"^{{{number}{sign}}}"
+            else:
+                result += f"^{{{sign}}}"
+        else:
+            result += expression[i]
+            i += 1
+    return '$' + result + '$'
 
 def drop_unname(df):
     '''
