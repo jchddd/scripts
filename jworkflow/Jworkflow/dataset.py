@@ -47,8 +47,8 @@ dataset_molecule = {
     'NO3Hs': {'uniform_name': 'NO3H', 'structure': Molecule(['N', 'O', 'O', 'O', 'H'], [[-0.26, 1.0, 0.82], [0, 0, 0], [0, 2.36, 0], [0.7, 1, 1.9], [0, 1, 2.8]]), 'is_translate': True, 'rotate': None},
     'NO2': {'uniform_name': 'NO2', 'structure': Molecule(['N', 'O', 'O'], [[0, 1.08, 0.648], [0, 2.166, 0], [0, 0, 0]]), 'is_translate': False, 'rotate': None},
     'NO2c': {'uniform_name': 'NO2', 'structure': Molecule(['N', 'O', 'O'], [[0, 0, 0.648], [0, 1.08, 0], [0, -1.08, 0]]), 'is_translate': True, 'rotate': None},
-    'NO2h': {'uniform_name': 'NO2', 'structure': Molecule(['N', 'O', 'O'], [[0, 0, 0], [0, -0.62, 1.], [0, 1.3, 0.]]), 'is_translate': False, 'rotate': None},
-    'NO2Hh': {'uniform_name': 'NO2H', 'structure': Molecule(['N', 'O', 'O', 'H'], [[0, 0, 0], [0, -0.62, 1.], [0, 1.3, 0.], [0, -0.62, 1.96]]), 'is_translate': False, 'rotate': None},
+    'NO2h': {'uniform_name': 'NO2', 'structure': Molecule(['N', 'O', 'O'], [[0, 0, 0], [0, -0.62, 1.], [0, 1.3, 0.]]), 'is_translate': True, 'rotate': None},
+    'NO2Hh': {'uniform_name': 'NO2H', 'structure': Molecule(['N', 'O', 'O', 'H'], [[0, 0, 0], [0, -0.62, 1.], [0, 1.3, 0.], [0, -0.62, 1.96]]), 'is_translate': True, 'rotate': None},
     'NO2Hv': {'uniform_name': 'NO2H', 'structure': Molecule(['N', 'O', 'O', 'H'], [[0, 0, 1.23], [0, 0, 0], [0, 0, 2.46], [0, 0, 3.5]]), 'is_translate': True, 'rotate': None},
     'NO': {'uniform_name': 'NO', 'structure': Molecule(['N', 'O'], [[0, 0, 0], [0, 0, 1.23]]), 'is_translate': True, 'rotate': None},
     'NOH': {'uniform_name': 'NOH', 'structure': Molecule(['N', 'O', 'H'], [[0, 0, 0], [0, 0, 1.4], [0, 0.92, 1.7]]), 'is_translate': True, 'rotate': None},
@@ -207,9 +207,13 @@ dataset_Gcor = { # 298.15k 1bar
     'H2(g)': -0.121660, # -0.05806830282099462 CCCBDB 0.257961615785502(ZPE)-0.3160299186064966(H-TS)
     'H': -0.121660 / 2,
     'H2O(g)': 0.07749534868389718, # CCCBDB 0.5584250300384028(ZPE)-0.48092968135450564(H-TS)
-    'H2O(l)': -0.008634651316102832,
+    'H2O(l)': -0.008634651316102832, # G(H2Ol) = E(H2O) - 0.11
 
     'N2(g)': -0.352809, # -0.35779568903955816 CCCBDB 0.14444164298284623(ZPE)-0.5022373320224044(H-TS)
+    # error correction for N2 https://pubs.acs.org/doi/10.1021/acscatal.4c04878
+    # error_N2 = -2 * (H_ASR^DFT - H_ASR^EXP (-0.48) ), ASR: gas-phase ammonia synthesis reaction
+    # H_ASR^DFT = (E_DFT + ZPE)_NH3 - 1.5 (E_DFT + ZPE)_H2 - 0.5 (E_DFT + ZPE)_N2 ~= -1.1215736918951595 (ZPE from CCCBDB)
+    # error_N2 = 1.283, H_N2 = E_DFT + ZPE + error_N2 ????
     'NH3(g)': 0.388528, # 0.4028615132745161 CCCBDB 0.8944843204289648(ZPE)-0.49162280715444867(H-TS)
     'HNO3(g)': -0.005, # -0.004954969638454765 CCCBDB 0.6966054687546107(ZPE)-0.7015604383930655(H-TS) 
     'NO3f': -0.3679658485895027,# G(HNO3(g)) - 0.5 G(H2(g)) - Gcorrect(0.392) https://doi.org/10.1002/adfm.202008533
@@ -282,10 +286,10 @@ def reaction_energy(reaction, product, energy_dict={}, Gcor_dict={}, U=0, PH=0, 
             if len(Gcor_dict) > 0:
                 all_species[varia] += value
     # update energy with applied U and PH
-    if 'e' in all_species.keys() and U != 0:
-        all_species['e'] += -1 * U
-    if 'H' in all_species.keys() and PH != 0:
-        all_species['H'] += -0.06 * PH
+    if 'e' in all_species.keys() and U != 0: # https://pubs.acs.org/doi/10.1021/acscatal.4c04878
+        all_species['e'] += -1 * U # dG(U) = dG(0) - v(e-) eU, v(e-) is the number of transferred electrons, e * U(V) -> eV, U为U_RHE
+    if 'H' in all_species.keys() and PH != 0: 
+        all_species['H'] += -0.059524 * PH # U_SHE = U_RHE + k_BTln(10), or G(H+) + \mu_e(SHE) = 0.5H2(g); \mu_e(SHE) = k_BTlin(10)
     # calculate reaction energy
     step = sum(coeff_varia[0] * float(all_species[coeff_varia[1]]) for coeff_varia in [sep_coeff_varia(pair) for pair in products.split('+')]) \
            - sum(coeff_varia[0] * float(all_species[coeff_varia[1]]) for coeff_varia in [sep_coeff_varia(pair) for pair in refer.split('+')])
