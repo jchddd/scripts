@@ -1,7 +1,7 @@
 #!/bin/bash
 
-Pot_path=/sh3/home/yuandw2/POTCAR
-check_jobs=squeue
+temp
+temp
 Filter_command="ls|cat"
 user=$(whoami)
 zdycm=""
