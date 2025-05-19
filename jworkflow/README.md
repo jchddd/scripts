@@ -15,5 +15,6 @@ Custom Python scripts based mainly on **pymatgen** and are used to analyze VASP 
 - [plot.py](https://github.com/jchddd/scripts/blob/main/jworkflow/Jworkflow/plot.py): Plot slab structures and energy profile.
 - [electronic.py](https://github.com/jchddd/scripts/blob/main/jworkflow/Jworkflow/electronic.py): Gather DOS and COHP information from vasprun.xml and cohpcar.lobster file respectively.
 - [dataset.py](https://github.com/jchddd/scripts/blob/main/jworkflow/Jworkflow/dataset.py): Store molecular structures and energies, and reaction formulas.
+- [pourbiax.py](https://github.com/jchddd/scripts/blob/main/jworkflow/Jworkflow/pourbiax.py): Plot Pourbiax diagram and store example data.
 ## Tutorial
 See Tutorial Jupyter Notebooks
