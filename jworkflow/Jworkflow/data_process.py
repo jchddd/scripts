@@ -259,7 +259,7 @@ class Adss_DataExtract_PostProcess():
             res_dict[res_key] = []
         # loop path and extract result
         for i, path in enumerate(path_iterate):
-            ads_sys = path.split('\\')[-1]
+            ads_sys = os.path.basename(os.path.normpath(path))
             for key in res_dict:
                 if key == 'ads_sys':
                     res_dict[key].append(ads_sys)
