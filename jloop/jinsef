@@ -9,6 +9,8 @@ if grep -iq "Selective dynamics" POSCAR; then
 	elif [[ $coor_type == [Cc] ]];then
 		fix=$(max_z)
 	fi
+else
+        fix=0.0
 fi
 fix=$(echo "$fix + 0.6" | bc -l)
 
