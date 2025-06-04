@@ -89,12 +89,11 @@ def get_vasp_results(result_type, path=None):
         f.close()
     elif result_type == 'M':
         f = open(path + '\\OSZICAR')
+        result = 0
         for line in f:
             match = re.findall('F=*', line)
             if match != [] and 'mag' in line:
-                result = float(line.split('mag=')[1])
-            else:
-                result = 0
+                result = float(line.split('mag=')[1])                
         f.close()
     elif result_type == 'N':
         es = 0
