@@ -396,6 +396,7 @@ for opt in $@;do
 			ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
 			elen=$(head -7 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
 			while [ -n "$ele" ];do
+				((elen=elen*1))
 				if   [ "$ele" == "Fe" -o "$ele" == "Cr" -o "$ele" == "Mo" ];then
 					magmom=$magmom" $elen*4.0"
 				elif [ "$ele" == "Ni" -o "$ele" == "Co" ];then
