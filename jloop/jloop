@@ -108,6 +108,8 @@ for opt in $@;do
 		C219_forl="activa";Execute_for="activa";continue
 	elif [ $opt == 'nswl' ];then
 		C220_nswl="activa";Execute_for="activa";continue
+	elif [ $opt == 'eseq' ];then
+		C221_eseq="activa";Execute_for="activa";continue
 	# If 1 - Part 3 - Batch command 3
 	elif [ $opt == 'setm' ];then
 		C301_setm="activa"
@@ -118,7 +120,7 @@ for opt in $@;do
 	elif [ $opt == 'chgd' ];then
 		C304_chgd="activa";Filter_command=$Filter_command"|grep -v CHGCAR_diffs";mkdir CHGCAR_diffs;Execute_for="activa";continue
 	elif [ $opt == 'zdy' ];then
-                echo 'Enter custom commands, using $i to refer to each selected object'
+		echo 'Enter custom commands, using $i to refer to each selected object'
 		read -r zdycm
 		C305_zdy="activa"
 	fi
@@ -165,22 +167,25 @@ for opt in $@;do
 			fi
 			cd ..
 		elif [ $C107_rmel"te" == "activate" ];then
-			echo $i
+			sed -i 's/\r$//' $i
 			nr=$(wc -l $i|cut -d " " -f 1)
-			cl1=$(sed -n '9p' $i|grep 'F');cl2=$(sed -n '9p' $i|grep 'T')
-			if [ -n "$cl1" ] || [ -n "$cl2" ];then
-				nh=8
-			else
+			nr9=$(awk -F ' ' 'NR==9 {print NF; exit}' $i)
+			if [[ "$nr9" -eq 1 ]];then
 				nh=9
+			else
+				nh=8
 			fi
 			head -$nh $i > $i"_head"
-			sed -i 's/
-//g' $i"_head"
 			let nt=nr-nh
 			tail -$nt $i > $i"_tail"
-			cut -d " " -f 1,2,3,4,5,6 $i"_tail" > f_tail
+			awk '{$1=$1};1' $i"_tail" > $i"_tail_rmb"
+			if [[ "$nh" -eq 8 ]];then
+				cut -d " " -f 1-3 $i"_tail_rmb" > f_tail
+			else
+				cut -d " " -f 1-6 $i"_tail_rmb" > f_tail
+			fi
 			cat $i"_head" f_tail > $i
-			rm $i"_tail";rm $i"_head";rm f_tail
+			rm $i"_tail";rm $i"_head";rm f_tail;rm $i"_tail_rmb"
 		elif [ $C108_apot"te" == "activate" ];then
 			cd $i;j=1
 			if [ -f POTCAR ];then
@@ -389,6 +394,13 @@ for opt in $@;do
 				echo $i
 			fi
 			cd ..
+		elif [ $C221_eseq"te" == "activate" ];then
+			cd $i
+			nes=$(jgc es | awk -F " " '{print $2}')
+			if [[ "$nes" -eq "$opt" ]];then
+				echo $i
+			fi
+			cd ..
 		# if 2 - Part 4 - Batch command 3
 		elif [ $C301_setm"te" == "activate" ];then
 			cd $i;sed -i 's/# ISPIN = 2/  ISPIN = 2/g' INCAR;j=1;magmom=""
@@ -397,9 +409,9 @@ for opt in $@;do
 			elen=$(head -7 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
 			while [ -n "$ele" ];do
 				((elen=elen*1))
-				if   [ "$ele" == "Fe" -o "$ele" == "Cr" -o "$ele" == "Mo" ];then
+				if   [ "$ele" == "Fe" -o "$ele" == "Co" -o "$ele" == "XX" ];then
 					magmom=$magmom" $elen*4.0"
-				elif [ "$ele" == "Ni" -o "$ele" == "Co" ];then
+				elif [ "$ele" == "Ni" -o "$ele" == "Mn" ];then
 					magmom=$magmom" $elen*3.0"
 				else
 					magmom=$magmom" $elen*0.0"
@@ -513,6 +525,8 @@ for opt in $@;do
 		C219_forl="";Execute_for=""
 	elif [ $C220_nswl"te" == "activate" ];then
 		C220_nswl="";Execute_for=""
+	elif [ $C221_eseq"te" == "activate" ];then
+		C221_eseq="";Execute_for=""
 	# if 3 - Part 3 - Batch command 3
 	elif [ $C301_setm"te" == "activate" ];then
 		C301_setm=""
