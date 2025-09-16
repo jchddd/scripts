@@ -211,9 +211,9 @@ dataset_Gcor = { # 298.15k 1bar
 
     'N2(g)': -0.352809, # -0.35779568903955816 CCCBDB 0.14444164298284623(ZPE)-0.5022373320224044(H-TS)
     # error correction for N2 https://pubs.acs.org/doi/10.1021/acscatal.4c04878
-    # error_N2 = -2 * (H_ASR^DFT - H_ASR^EXP (-0.48) ), ASR: gas-phase ammonia synthesis reaction
-    # H_ASR^DFT = (E_DFT + ZPE)_NH3 - 1.5 (E_DFT + ZPE)_H2 - 0.5 (E_DFT + ZPE)_N2 ~= -1.1215736918951595 (ZPE from CCCBDB)
-    # error_N2 = 1.283, H_N2 = E_DFT + ZPE + error_N2 ????
+    # Hf(DFT_ASP) = -0.7042012847407122, using new DFT energy and CCCBDB thermal correction
+    # Hf(EXP_ASP) = -0.476131348
+    # correction to N2 = 0.456
     'NH3(g)': 0.388528, # 0.4028615132745161 CCCBDB 0.8944843204289648(ZPE)-0.49162280715444867(H-TS)
     'HNO3(g)': -0.005, # -0.004954969638454765 CCCBDB 0.6966054687546107(ZPE)-0.7015604383930655(H-TS) 
     'NO3f': -0.3679658485895027,# G(HNO3(g)) - 0.5 G(H2(g)) - Gcorrect(0.392) https://doi.org/10.1002/adfm.202008533
