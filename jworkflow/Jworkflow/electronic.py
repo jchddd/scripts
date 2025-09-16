@@ -1,6 +1,6 @@
 from pymatgen.electronic_structure.core import Spin, OrbitalType, Orbital
 from pymatgen.electronic_structure.cohp import CompleteCohp
-from pymatgen.io.vasp.outputs import Locpot, Chgcar
+from pymatgen.io.vasp.outputs import Locpot, Chgcar, Procar
 from pymatgen.io.lobster import Doscar
 from pymatgen.io.vasp import Vasprun
 from pymatgen.core import Element
@@ -8,45 +8,6 @@ from scipy.signal import hilbert
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-
-def get_chgcar_distrib(chgcar_file, axis):
-    '''
-    Function to obtain the distribtion of deformation charge density along x, y or z axis
-
-    Parameters:
-        - chgcar_file: Path to the CHGCAR file / str, path
-        - axis: The axis for projecting / int, 0, 1 or 2, represent x, y and z axis
-    Return:
-        - A dict include axis grid and charge density difference
-    '''
-    c = Chgcar.from_file(chgcar_file)
-    return {'grid': c.get_axis_grid(axis), 'chg_diff': c.get_average_along_axis(axis)}
-
-
-def smooth_chgcar(origin_chgcar, smooth_chgcar, xt=[0, 1], yt=[0, 1], zt=[0, 1]):
-    '''
-    Function to smooth the CHGCAR
-
-    Parameters:
-        - origin_chgcar: Path to the origin CHGCAR / str, path
-        - smooth_chgcar: Path to the smoothed CHGCAR /str, path
-        - xt: X-axis threshold in percentage, charge out of this threshold will be set to 0 / (2) list, default [0, 1]
-        - yt: X-axis threshold in percentage / (2) list, default [0, 1]
-        - zt: Z-axis threshold in percentage / (2) list, default [0, 1]
-    Accomplish:
-        - Write a smoothed CHGCAR at smooth_chgcar
-    '''
-    c = Chgcar.from_file(origin_chgcar)
-    gridx = c.data['total'].shape[0]
-    gridy = c.data['total'].shape[1]
-    gridz = c.data['total'].shape[2]
-    for x in range(gridx):
-        for y in range(gridy):
-            for z in range(gridz):
-                if (x <= gridx * xt[0] or x >= gridx * xt[1]) or (y <= gridy * yt[0] or y >= gridy * yt[1]) or (z <= gridz * zt[0] or z >= gridz * zt[1]):
-                    c.data['total'][x][y][z] = 0.
-    c.write_file(smooth_chgcar)
 
 
 def get_locpot_z_distrib(Locpot_file):
@@ -61,6 +22,103 @@ def get_locpot_z_distrib(Locpot_file):
     locpot = Locpot.from_file(Locpot_file)
     return locpot.get_average_along_axis(2)
 
+
+class CHG_Process():
+    def __init__(self):
+        self.chgcar = None
+
+    def read_chgcar(self, chgcar):
+        '''
+        Read in chgcar file
+
+        Parameter:
+            - chgcar (path)
+        '''
+        self.chgcar = Chgcar.from_file(chgcar)
+
+    def get_chgcar_distrib(self, axis):
+        '''
+        Function to obtain the distribtion of deformation charge density along x, y or z axis
+    
+        Parameter:
+            - axis (int): The axis for projecting / int, 0, 1 or 2, represent x, y and z axis
+        Return:
+            - A dict include axis grid and charge density difference
+        '''
+        return {'grid': self.chgcar.get_axis_grid(axis), 'chg_diff': self.chgcar.get_average_along_axis(axis)}
+        
+    def smooth_chgcar(self, smooth_chgcar, xt=[0, 1], yt=[0, 1], zt=[0, 1]):
+        '''
+        Function to smooth the CHGCAR
+    
+        Parameters:
+            - smooth_chgcar (path): Path to the smoothed CHGCAR /str, path
+            - xt (list): X-axis threshold in percentage, charge out of this threshold will be set to 0 / (2) list, default [0, 1]
+            - yt (list): X-axis threshold in percentage / (2) list, default [0, 1]
+            - zt (list): Z-axis threshold in percentage / (2) list, default [0, 1]
+        Accomplish:
+            - Write a smoothed CHGCAR at smooth_chgcar
+        '''
+        gridx = self.chgcar.data['total'].shape[0]
+        gridy = self.chgcar.data['total'].shape[1]
+        gridz = self.chgcar.data['total'].shape[2]
+        for x in range(gridx):
+            for y in range(gridy):
+                for z in range(gridz):
+                    if (x <= gridx * xt[0] or x >= gridx * xt[1]) or (y <= gridy * yt[0] or y >= gridy * yt[1]) or (z <= gridz * zt[0] or z >= gridz * zt[1]):
+                        self.chgcar.data['total'][x][y][z] = 0.
+        self.chgcar.write_file(smooth_chgcar)
+        
+    def get_elec_in_sphere(self, target_atom, radius):
+        '''
+        The value of the charge within a series of radii of an atom
+
+        Parameters:
+            - target_atom (int)
+            - radius (list)
+        Return:
+            - a list of charge number
+        '''
+        xt, yt, zt = self.chgcar.structure.cart_coords[target_atom]
+        # get dV
+        dx = self.chgcar.xpoints[1] - self.chgcar.xpoints[0]
+        dy = self.chgcar.ypoints[1] - self.chgcar.ypoints[0]
+        dz = self.chgcar.zpoints[1] - self.chgcar.zpoints[0]
+        dV = dx * dy * dz
+        # get ele in sphere
+        elecs = []
+        for r in radius:
+            llattice = self.chgcar.structure.lattice
+            x, y, z = np.meshgrid(self.chgcar.xpoints*llattice.a, self.chgcar.ypoints*llattice.b, self.chgcar.zpoints*llattice.c, indexing='ij')
+            distances = np.sqrt((x - xt)**2 + (y - yt)**2 + (z - zt)**2)
+            mask = distances <= r
+            eles.append(np.sum(self.chgcar.data['total'][mask]) * dV)
+        return elecs
+
+def find_orbital_component(procar, target_atom, target_orbital, proj_threshold=0.0):
+    '''
+    Search for the bands where the projection of an atom's orbit is greater than a certain value
+
+    Parameters:
+        - procar (path to file): Procar file
+        - target_atom (int)
+        - target_orbital (str): orbital type list s, px, py, pz, dxy, dxz, dyz, dx2, dz2 ..
+        - proj_threshold (float). Default = 0.0
+    Return:
+        - a list of list (spin, kpoint, band, atom, orbital, proj_weight)
+    '''
+    procar = Procar(procar)
+    target_orbital = procar.orbitals.index(target_orbital)
+    results = []
+    for spin in [Spin.up, Spin.down]:
+        if spin in procar.data.keys():
+            for kpoint in range(procar.nkpoints):
+                for band in range(procar.nbands):
+                    proj_weight = procar.data[spin][kpoint][band][target_atom][target_orbital]
+                    if proj_weight > proj_threshold:
+                        results.append([spin, kpoint, band, target_atom, target_orbital, proj_weight])
+    return results
+    
 name_to_value_orbital = {
     's': 0,
     'py': 1,
