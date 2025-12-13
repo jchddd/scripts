@@ -1,5 +1,7 @@
 # jworkflow
 Custom Python scripts based mainly on **pymatgen** and are used to analyze VASP calculation results and catalysis related content
+## Installation
+Copy the Folder Jworkflow into the Lib folder under your Python directory, or run the code at the same level as Folder Jworkflow.
 ## Requirement
 - pymatgen
 - ase
@@ -18,3 +20,4 @@ Custom Python scripts based mainly on **pymatgen** and are used to analyze VASP 
 - [pourbiax.py](https://github.com/jchddd/scripts/blob/main/jworkflow/Jworkflow/pourbiax.py): Plot Pourbiax diagram and store example data.
 ## Tutorial
 See Tutorial Jupyter Notebooks
+
