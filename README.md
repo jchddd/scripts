@@ -1,11 +1,14 @@
 # Script
-Custom scripts mainly for VASP pre and post processing, expecially for catalytic related application scenarios.
-More detailed instructions and tutorials are available in the corresponding folder.
+Some custom scripts. Detailed instructions and tutorials are available in the corresponding folder.
 
 ## Jworkflow
 
-Pymatgen-based Python scripts mainly for Batch creation of adsorption configurations and adsorption energy calculation.
+Pymatgen-based Python scripts mainly for Batch creation of adsorption configurations and adsorption energy calculation for VASP.
 
 ## jloop
 
-A small bash script for batch processing and task submission
+A small bash script for batch processing and task submission.
+
+## ASCF
+
+A script that primarily relies on software and methods such as ASE, SOAP, Chemiscope, fpsample, and sklearn for extracting structural feature vectors, performing dimensionality reduction and visualization, sampling, and detecting outliers.
