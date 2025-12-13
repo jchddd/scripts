@@ -274,7 +274,7 @@ def plot_configration(df, plot_part, sequence=None, structure_path=os.getcwd(), 
 
 def energy_diagram(ax, df, sys, path_steps, lp_step=[1, 1.2, '-'], lp_link=[1, 0.6, '--'], xticks=None, xtickpara=[6, -30, 'left'],
                    set_yticks=None, set_ylabel=None, xlim=None, ylim=None, set_legend=None, show_space_line=False, space_line_para=['lightgrey', 0.6, '--'],
-                   mark_PDS=None, annotatepara=[0.6,6,6], bar_elp=None, elp_insert=66):
+                   mark_PDS=None, annotatepara=[0.6,6,6], bar_elp=None, elp_insert=66, close_xaxis=False):
     '''
     Function to plot the energy diagram
 
@@ -285,8 +285,11 @@ def energy_diagram(ax, df, sys, path_steps, lp_step=[1, 1.2, '-'], lp_link=[1, 0
             Creat a new list at first [], add a new list inside to represent steps in the same x axis [[], ...]
             Add two list inside it to represent steps in this x and their links to previous steps, [[[], []], ...]
             The first list in the first x should only contain one list  represents the step and ignore the list that represent the links
-            In this case, the list of the previous x can be [[[('NNHv','r')]], [[], []], ...]
-            Then, add steps and their colors in the first list of the next x, [[[('NNH2','r'),('NHNH','b')], []], ...]
+            In NRR case, the list of the first x can be [[[('N2','r')]], [[], []], ...]
+            Then, the second can be [[..], [[('NNH', 'r')], [(0, 'r')]], ...]
+            A (5, ) tuple can be add at within the step info to represe text on this step with textinfo, shift, color, fontsize and rotate
+            For example [[('NNH', 'r', ('E', 0.1, 'r', 8, 0), (.....))], 'E' represe energy value, such text can ba add as many as possible
+            Then, add steps and their colors in the thrid step, [[[('NNH','r'),('NHNH','b')], []], ...]
             Notice that all step names should be in the column names of the df
             Add lists with the same number of steps in the second list, [[[('NNH2','r'),('NHNH','b')], [[], []]], ...]
             Add the index and linking colour of previous steps to which it link to [[[('NNH2','r'),('NHNH','b')], [[(0,'r')], [(0,'b')]]], ...]
@@ -313,6 +316,7 @@ def energy_diagram(ax, df, sys, path_steps, lp_step=[1, 1.2, '-'], lp_link=[1, 0
             The third controls the line shap including line width, color and line style, (k = 3)
             The final controls the text info with x and y offset from the top of ellipses, color and fontsize, it can be ignored (k = 4)
         - elp_insert: Insert point number use to draw the ellipse / int, default 66
+        - close_xaxis: Close x axis / bool, default False
     Cautions: 
         - You can use 'none' color to hide unexpected steps or links
         - The length of each step and links projected on the X-axis is 1 (default) and the diagram starts from 0
@@ -332,6 +336,12 @@ def energy_diagram(ax, df, sys, path_steps, lp_step=[1, 1.2, '-'], lp_link=[1, 0
                     ax.plot([x_start, x_start + lp_link[0]], [y_start, energy], lw=lp_link[1], ls=lp_link[2], c=link[1], zorder=36)
             x_start += lp_link[0]
             ax.plot([x_start, x_start + lp_step[0]], [energy, energy], lw=lp_step[1], ls=lp_step[2], c=step[1], zorder=66)
+            # step text
+            if len(step) > 2:
+                for step_text in step[2:]:
+                    stext, sshift, scolor, ssize, srotate = step_text
+                    if stext == 'E': stext = str(np.round(energy, 2))
+                    ax.text(x_start + lp_step[0]/2, energy+sshift, stext, c=scolor, fontsize=ssize, rotation=srotate, ha='center', va='center', zorder=60)
             x_start -= lp_link[0]
         y_ends = [df.at[sys, istep[0]] for istep in stepinfo_in_x[0]]
         x_start += (lp_link[0] + lp_step[0])
@@ -404,6 +414,9 @@ def energy_diagram(ax, df, sys, path_steps, lp_step=[1, 1.2, '-'], lp_link=[1, 0
                 ax.text(point_barrier[0] + beinfo[3][0], point_barrier[1] + beinfo[3][1], 
                         str(round(point_barrier[1] - point_start[1], 2)),
                         c=beinfo[3][2], fontsize=beinfo[3][3], ha='center', va='center', zorder=100)
+    # x axis
+    if close_xaxis:
+        ax.xaxis.set_visible(False)
 
                 
 def plot_ellipse_barrier(ax, point_start, point_barrier, point_end, k=16, h=0.3, l=0.6, linepro=[0.6,'k','-'], insert=666, zorder=666):
