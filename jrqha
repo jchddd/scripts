@@ -1,0 +1,261 @@
+#!/bin/bash
+
+
+# functions
+check_file() { # check if VASP and phonopy input files are ready
+	local file=$1
+	if [ ! -f "$file" ]; then
+		echo "Error! $file is not exist!"
+		echo "You should prepare POSCAR, INCAR_fc, INCAR_sp, POTCAR, (KPOINTS_fc, KPOINTS_sp) and thermal.conf to run this script"
+		exit 1
+	fi
+}
+
+check_program() { # check if a program is exist
+	local program=$1
+	if ! command -v "$program" &> /dev/null; then
+		echo "Error! $program not found!"
+		exit 1
+	fi
+}
+
+make_dir() { # make a direction
+	local dir=$1
+	if [ ! -d $1 ]; then
+		mkdir $1
+	fi
+}
+
+call_line() { # print a line
+	echo ">>>DFPT-QHA-phonopy-------------------------------------"
+}
+
+get_atomnum() { # count atomnum in POSCAR, not used now
+	atomnum=0
+	j=1
+	sed -i "s/\r//" POSCAR
+	ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+	elen=$(head -7 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+	while [ -n "$ele" ];do
+		atomnum=$( expr $atomnum + $elen)
+		j=$[j+1]
+		ele_old=$ele
+		ele=$(head -6 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+		elen=$(head -7 POSCAR|tail -1|tr -s [:space:]|sed 's/^[ ]*//g'|cut -d ' ' -f $j)
+		if [ "$ele_old" == "$ele" ];then
+			break
+		fi
+	done
+	echo $atomnum
+}
+
+opt_result() {
+	echo "Gather optimization results"
+	echo "Make direction QHA/DSC(Different scaling CONTCAR)"
+	make_dir QHA/DSC
+	for jopt in $(ls QHA/AOP | cat);do
+		cp QHA/AOP/$jopt/CONTCAR QHA/DSC/$jopt
+	done
+}
+
+# main
+case "$1" in 
+	-h | --help) # print help information
+		help=true
+	;;
+	-s | --scale)
+		# check file
+		check_file "POSCAR"
+		check_file "INCAR_op"
+		check_file "INCAR_fc"
+		check_file "POTCAR"
+		check_file "thermal.conf"
+		# mkdir directions
+		echo "Generate structures with different scales"
+		echo "Make direction QHA, QHA/AOP(Atomic optimization), QHA/DSP(Different scaling POSCAR)"
+		make_dir QHA
+		make_dir QHA/AOP
+		make_dir QHA/DSP
+		# create POSCAR with different volum
+		sn=$2
+		echo "sn=$2" > scale_num
+		echo "Scale POSCAR from -$sn to $sn on DSP"
+		cp POSCAR QHA/DSP/POSCAR-0
+		cd QHA/DSP
+		for i in $(seq 1 $sn); do
+			cp POSCAR-0 POSCAR-$i
+			new_scale=$(echo "scale=2; 1.00+$i*0.01" | bc)
+			sed -i "2c$new_scale" POSCAR-$i
+			cp POSCAR-0 POSCAR--$i
+			new_scale=$(echo "scale=2; 1.00-$i*0.01" | bc)
+			sed -i "2c$new_scale" POSCAR--$i
+		done
+		# prepare for single point calculation
+		echo "Prepare for atomic optimization calculations on QHA/AOP"
+		for poscar in $(ls|cat); do
+			make_dir ../AOP/$poscar
+			cp $poscar ../AOP/$poscar/POSCAR
+			cp ../../INCAR_op ../AOP/$poscar/INCAR
+			cp ../../POTCAR ../AOP/$poscar/
+			if [ -f ../../KPOINTS_op ];then
+				cp ../../KPOINTS_op ../AOP/$poscar/KPOINTS
+			fi
+		done
+	;;
+	-o | --opt)
+		echo "Submit jobs for atomic optimization calculation by $2 script"
+		cd QHA/AOP
+		for jopt in $(ls|cat);do
+			cd $jopt
+			jrunj $2
+			cd ..
+		done
+	;;
+	-d | --dfpt)
+		check_program "phonopy"
+		opt_result
+		# prepare input files for calculation
+		echo "Generate input files for DFPT, with SPOSCAR at dim $dim"
+		echo "Make direction QHA/DFPT"
+		dim=$(grep DIM thermal.conf | cut -d = -f 2 | xargs)
+		mkdir QHA/DFPT
+		cd QHA/DFPT
+		for poscar in $(ls ../DSC | cat); do
+			make_dir $poscar
+			echo "Generate input files for $poscar"
+			cp ../DSC/$poscar $poscar/POSCAR_unitcell
+			cp ../../POTCAR $poscar/
+			cp ../../INCAR_fc $poscar/INCAR
+			if [ -f ../../KPOINTS_fc ];then
+				cp ../../KPOINTS_fc $poscar/KPOINTS
+			fi
+			# use phonopy to create super cell
+			cd $poscar
+			phonopy -d --dim="$dim" -c POSCAR_unitcell > phonopy_disp.scrout
+			cp SPOSCAR POSCAR
+			cd ..
+		done
+		# make done
+		echo "Input files were successfully generated for DFPT method" 
+		echo "You can go into the DFPT direction and run tasks"
+	;;
+	-f | --fd)
+		check_program "phonopy"
+		opt_result
+		echo "Generate input files for FD, with SPOSCAR at dim $dim"
+		echo "Make direction QHA/FD"
+		dim=$(grep DIM thermal.conf | cut -d = -f 2 | xargs)
+		mkdir QHA/FD
+		cd QHA/FD
+		for poscar in $(ls ../DSC | cat);do
+			# mkdir for POSCAR-x
+			make_dir $poscar
+			echo "Generate input files for $poscar"
+			cp ../DSC/$poscar $poscar/POSCAR_unitcell
+			# use phonopy to create POSCAR-00x
+			cd $poscar
+			phonopy -d --dim="$dim" -c POSCAR_unitcell > phonopy_disp.scrout
+			for file in "POSCAR-"*;do
+				make_dir $file"-run"
+				cp $file $file"-run"/POSCAR
+				cp ../../../INCAR_fc  $file"-run"/INCAR
+				cp ../../../POTCAR $file"-run"/
+				if [ -f ../../../KPOINTS_fc ];then
+					cp ../../../KPOINTS_fc $file"-run"/KPOINTS
+				fi
+			done
+			cd ..
+		done
+		# make done
+		echo "Input files were successfully generated for FD method" 
+		echo "You can go into the FD direction and run tasks"
+	;;
+	-c | --cal)
+		echo "Submit jobs for force contants (sets) calculation by $2 script"
+		if   [ -d QHA/FD ];then
+			echo "Find FD dir, submit FD jobs."
+			cd QHA/FD
+			for dir_scale_pos in $(ls|cat);do
+				cd $dir_scale_pos
+				for dir_run in *"-run";do
+					cd $dir_run
+					jrunj $2
+					cd ..
+				done
+				cd ..
+			done
+		elif [ -d QHA/DFPT ];then
+			echo "Find DFPT dir, submit DFPT jobs"
+			cd QHA/DFPT
+			for dir_scale_pos in $(ls|cat);do
+				cd $dir_scale_pos
+				jrunj $2
+				cd ..
+			done
+		fi
+	;;
+	-q | --qha)
+		check_program "phonopy"
+		source scale_num
+		Tmax=$(grep TMAX thermal.conf | cut -d = -f 2 | xargs)
+		# mkdir direction
+		echo "Make direction QHA/Thermal_properties, QHA/QHA_results"
+		make_dir "QHA/Thermal_properties"
+		make_dir "QHA/QHA_results"
+		# grep e-v, fe-v data
+		echo "Extract e-v and fe-v data from single point outputs"
+		cd QHA/AOP
+		phonopy-vasp-efe --tmax=$Tmax $(eval echo "POSCAR-{-{$sn..1},{0..$sn}}/vasprun.xml")
+		mv e-v.dat ../QHA_results/
+		mv fe-v.dat ../QHA_results/
+		# calculate thermal properties
+		if [ -d ../FD ];then
+			echo "Calculate thermal properties from FD outputs"
+			cd ../FD
+			for poscar in $(ls|cat); do
+				echo "Calculate thermal properties for $poscar"
+				cd $poscar
+				cp ../../../thermal.conf ./
+				phonopy -f *-run/vasprun.xml > phonopy_fc.scrout
+				phonopy -c POSCAR_unitcell -t thermal.conf > phonopy_thermal.scrout
+				suffix=$(echo $poscar | cut -d 'R' -f 2)
+				mv thermal_properties.yaml ../../Thermal_properties/thermal_properties.yaml$suffix
+				cd ..
+			done
+		elif [ -d ../DFPT ];then
+			echo "Calculate thermal properties from DFPT outputs"
+			cd ../DFPT
+			for poscar in $(ls|cat); do
+				echo "Calculate thermal properties for $poscar"
+				cd $poscar
+				cp ../../../thermal.conf ./
+				phonopy --fc vasprun.xml > phonopy_fc.scrout
+				phonopy -c POSCAR_unitcell -t thermal.conf > phonopy_thermal.scrout
+				suffix=$(echo $poscar | cut -d 'R' -f 2)
+				mv thermal_properties.yaml ../../Thermal_properties/thermal_properties.yaml$suffix
+				cd ..
+			done
+		fi
+		# phonopy-qha
+		echo "Run phonopy-qha, output files will store in QHA/QHA_results"
+		cd ../QHA_results
+		phonopy-qha --tmax=$Tmax --efe fe-v.dat e-v.dat $(eval echo "../Thermal_properties/thermal_properties.yaml-{-{$sn..1},{0..$sn}}")
+	;;
+esac
+
+if [ "$help" = true ];then
+	echo "This script can assist in the calculation of phonopy-qha, steps to use this script are:"
+	echo "1, prepare input files. 4~6 VASP input files, POSCAR, POTCAR, and"
+	echo "(KPOINTS_fc) and INCAR_fc for force constant (sets) calculation;"
+	echo "(KPOINTS_op) and INCAR_op for scaled POSCAR atomic position optimization (ISIF=4) calculation;"
+	echo "and thermal.conf (TPROP=.TRUE.) to calculate thermal property by phonopy."
+	echo "2, execute jrqha -s(--scale) n to generate scaled POSCARs from -n,..,-1,0,1,..,n by 1 %, and prepare input files."
+	echo "3, execute jrqha -o(--opt) xxx. xxx is script tag on jrunj, to run atomic optimization or single point calculation for scaled POSCARs."
+	echo "4, prepare input files for force sets (constant) calculation by Finite displacement (FD) or Density Function Perturbation Theory (DFPT)."
+	echo "FD:   jrqha -f(--fd),   INCAR_fc: NSW=0, IBRION=-1, #EDIFFG, EDIFF=1E-7~8 .et.al, thermal.conf: #FORCE_CONSTANTS, DIM>1"
+	echo "DFPT: jrqah -d(--dfpt), INCAR_fc: NSW=1, IBRION=8,  #EDIFFG, EDIFF=1E-7~8 .et.al, thermal.conf:  FORCE_CONSTANTS=READ, DIM=1 1 1"
+	echo "5, submit VASP calculations of FD or DFPT by executing jrqha -c(--cal) xxx. xxx is the script tag used by jrunj."
+	echo "6, perform phonopy-qha calculation by executing jrqha -q(--qha). Results will be stored on QHA/QHA_results."
+	echo "This script needs to be run in the same directory as the prepared input files and the generated QHA folder all the time."
+fi
+
